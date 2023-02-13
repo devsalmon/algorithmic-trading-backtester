@@ -19,7 +19,7 @@ class PortfolioConstructor():
         # as we can pass this list into yf.download and will pull all data for each
         # stock in one go. For now we will just use AAPL and come back to this.
         self.trades = trades
-        self.data = yf.download('AAPL','2013-01-01','2019-08-01')
+        self.data = yf.download('AAPL','2013-01-01','2019-08-01',progress=False)
         self.df = pd.DataFrame(index=['date'], columns = ['value'])
         # Then we need a for loop for every date..
         for i in range(5):
@@ -33,7 +33,6 @@ class PortfolioConstructor():
 
             stock_val = self.data.loc[date]["Open"]
             df.at[date, 'value'] = stock_val
-
 
         print(df)
 
