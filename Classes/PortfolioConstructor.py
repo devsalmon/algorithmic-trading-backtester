@@ -24,12 +24,13 @@ class PortfolioConstructor():
         # Set the dataframe columns to the tickers and a value column.
         columns = list(self.tickers)
         columns.append('value')
+        columns.append('cash')
         # Choose date range for backtesting with periods being how many days ahead.
         date = pd.bdate_range("20130102", periods=10)
         # Create your dataframe with date being the index and fill in values as 0.
         df = pd.DataFrame(index=date, columns = columns).fillna(0)
         # Get data for each traded ticker from yfinance between date ranges.
-        data = yf.download(list(self.tickers),dt.date(2013,1,2),dt.date(2013,1,17))
+        data = yf.download(list(self.tickers),dt.date(2013,1,2),dt.date(2013,1,17), progress=False)
         # Set each value in the dataframe with the quantity of stock bought.
         for trade in trades:
             utid, ticker, qty, buy_date, sell_date = trade
@@ -37,10 +38,12 @@ class PortfolioConstructor():
         # Use price of each stock from the yfinance data and use vectorisation to multiply
         # this by the quantity of the stock we have for each time series.
         for ticker in self.tickers:
-            df[ticker] = df[ticker] * data['Adj Close'][ticker]
+            df[ticker] *= data['Adj Close'][ticker]
         # Add up each column to get total value column for each time series.
         for ticker in self.tickers:
             df['value'] += df[ticker]
+            
+        df['value'] += df['cash']
         # Add dataframe as an object attribute.
         self.df = df
     
