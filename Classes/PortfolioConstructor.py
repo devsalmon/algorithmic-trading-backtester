@@ -29,15 +29,13 @@ class PortfolioConstructor():
         df = pd.DataFrame(index=date, columns = ['value'])
 
         for index, row in df.iterrows():
-            print(index)
             date = str(index.date())
 
-            data_value = self.data.loc[date]["Open"]
+            stock_val = self.data.loc[date]["Open"]
+            df.at[date, 'value'] = stock_val
 
-            df.loc[index.date(), 'value'] = data_value
 
-
-        # print(df)
+        print(df)
 
         # new_df = pd.DataFrame(index=[len(self.df)], columns = ['value'])
         # new_df["value"] = 21
