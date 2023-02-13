@@ -30,7 +30,6 @@ class PortfolioConstructor():
 
         for index, row in df.iterrows():
             date = str(index.date())
-
             stock_val = self.data.loc[date]["Open"]
             df.at[date, 'value'] = stock_val
 
