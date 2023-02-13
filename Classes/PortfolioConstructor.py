@@ -19,22 +19,32 @@ class PortfolioConstructor():
         # as we can pass this list into yf.download and will pull all data for each
         # stock in one go. For now we will just use AAPL and come back to this.
         self.trades = trades
-        self.data = yf.download('AAPL','2013-01-01','2019-08-01',progress=False)
-        self.df = pd.DataFrame(index=['date'], columns = ['value'])
+        ##self.data = yf.download('AAPL','2013-01-01','2016-08-01',progress=False)
+        # self.df = pd.DataFrame(index=['date'], columns = ['value'])
         # Then we need a for loop for every date..
-        for i in range(5):
-            self.df.loc[len(self.df)] = i*1 
 
-        date = pd.bdate_range("20130102", periods=2)
-        df = pd.DataFrame(index=date, columns = ['value'])
+        date = pd.bdate_range("20130102", periods=12)
+        df = pd.DataFrame(index=date, columns = ['value']).fillna(0)
+        
+        # Created column for apple
+        df['AAPL'] = 0
+        #print(dt.date(2023,1,4))
+        df['AAPL'].loc[dt.date(2013,1,4):dt.date(2013,1,9)] = 10
+        apple_vector = yf.download("AAPL",dt.date(2013,1,2),dt.date(2013,1,17))
+        df['AAPL'] = df['AAPL'] * apple_vector['Adj Close']
 
-        for index, row in df.iterrows():
-            date = str(index.date())
 
-            stock_val = self.data.loc[date]["Open"]
-            df.at[date, 'value'] = stock_val
-
+        df['value'] += df['AAPL']
         print(df)
+        
+        
+        # for index, row in df.iterrows():
+        #     date = str(index.date())
+
+        #     stock_val = self.data.loc[date]["Open"]
+        #     df.at[date, 'value'] = stock_val
+
+        # print(df)
 
         # new_df = pd.DataFrame(index=[len(self.df)], columns = ['value'])
         # new_df["value"] = 21
