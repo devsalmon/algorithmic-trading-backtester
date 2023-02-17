@@ -16,27 +16,21 @@ import datetime as dt
 class PortfolioConstructor():
     def __init__(self, trades):
         super().__init__()
-        self.cashValue = 10_000
-        #self.portfolioValue = 10_000
-        # Get all different tickers traded and add to ticker set.
-        self.tickers = set()
-        # Get all unique tickers from trades.
-        for trade in trades:
-            utid, ticker, qty, leverage, buy_date, sell_date = trade
-            if ticker not in self.tickers:
-                self.tickers.add(ticker)
-        # Set the dataframe columns to the tickers and a value and cash column.
+        self.cash_value = 10_000
+        #self.portfolio_value = 10_000
+
+        self.tickers = self.get_tickers(trades)
+        # Define the columns for the df
         columns = list(self.tickers)
-        columns.append('value')
-        columns.append('cash')
+        # columns.extend(['value', 'cash'])
         # Choose date range for backtesting with periods being how many days ahead.
-        date = pd.bdate_range("20130102", periods=10)
-        # Create your dataframe with date being the index and fill in values as 0.
-        df = pd.DataFrame(index=date, columns = columns).fillna(0)
-        # Overwrite cash column to begin with the initial cash.
-        df['cash'] = self.cashValue
-        # Get data for each traded ticker from yfinance between date ranges.
-        data = yf.download(list(self.tickers),dt.date(2013,1,2),dt.date(2013,1,17), progress=False)
+        date_range = pd.bdate_range("20130102", periods=10)
+        # Create dataframe with index as date fill in values as 0.
+        df = pd.DataFrame(index=date_range, columns = columns).fillna(0)
+        # Set cash column to inital portfolio cash value
+        df['cash'] = self.cash_value
+        data = self.get_yf_data(self.tickers, dt.date(2013,1,2), dt.date(2013,1,17))
+
         # Set each value in the dataframe with the quantity of stock bought.
         # BUY
         for trade in trades:
@@ -64,7 +58,20 @@ class PortfolioConstructor():
 
         # Add dataframe as an object attribute.
         self.df = df
-    
+
+    def get_tickers(self, trades):
+        """Returns a list of tickers for all tickers traded in trades"""
+        tickers = set()
+        for trade in trades:
+            utid, ticker, qty, leverage, buy_date, sell_date = trade
+            if ticker not in tickers:
+                tickers.add(ticker)
+        return tickers
+
+    def get_yf_data(self, tickers, start_date, end_date):
+        """Returns a dataframe of tickers for the date range provided"""
+        return yf.download(list(tickers), start_date, end_date, progress=False)
+        
     def print_dataframe(self):
         print(self.df)
 
