@@ -22,7 +22,7 @@ class PortfolioConstructor():
         self.tickers = self.get_tickers(trades)
         # Define the columns for the df
         columns = list(self.tickers)
-        # columns.extend(['value', 'cash'])
+        columns.extend(['value', 'cash'])
         # Choose date range for backtesting with periods being how many days ahead.
         date_range = pd.bdate_range("20130102", periods=10)
         # Create dataframe with index as date fill in values as 0.
