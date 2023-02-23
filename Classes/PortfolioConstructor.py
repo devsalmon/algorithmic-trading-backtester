@@ -16,7 +16,7 @@ import datetime as dt
 class PortfolioConstructor():
     def __init__(self, trades):
         super().__init__()
-        self.cash_value = 10_000
+        self.cash_value = 7750
         #self.portfolio_value = 10_000
 
         self.tickers = self.get_tickers(trades)
@@ -24,12 +24,12 @@ class PortfolioConstructor():
         columns = list(self.tickers)
         columns.extend(['value', 'cash'])
         # Choose date range for backtesting with periods being how many days ahead.
-        date_range = pd.bdate_range("20130102", periods=10)
+        date_range = pd.bdate_range("20190101", periods=1085)
         # Create dataframe with index as date fill in values as 0.
         df = pd.DataFrame(index=date_range, columns = columns).fillna(0)
         # Set cash column to inital portfolio cash value
         df['cash'] = self.cash_value
-        data = self.get_yf_data(self.tickers, dt.date(2013,1,2), dt.date(2013,1,17))
+        data = self.get_yf_data(self.tickers, dt.date(2019,1,1), dt.date(2023,2,23))
 
         # Set each value in the dataframe with the quantity of stock bought.
         # BUY
@@ -66,13 +66,17 @@ class PortfolioConstructor():
             utid, ticker, qty, leverage, buy_date, sell_date = trade
             if ticker not in tickers:
                 tickers.add(ticker)
+
         return tickers
 
     def get_yf_data(self, tickers, start_date, end_date):
         """Returns a dataframe of tickers for the date range provided"""
-        return yf.download(list(tickers), start_date, end_date, progress=False)
+        tickers = list(tickers)
+        tickers.append("AAPL")
+        return yf.download(tickers, start_date, end_date, progress=False)
         
     def print_dataframe(self):
+        print(min(self.df['cash']))
         print(self.df)
 
 
@@ -84,5 +88,5 @@ trades = [
     [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
     ]
 
-pc = PortfolioConstructor(trades)
-pc.print_dataframe()
+# pc = PortfolioConstructor(trades)
+# pc.print_dataframe()
