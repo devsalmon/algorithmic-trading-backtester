@@ -23,13 +23,23 @@ class PortfolioConstructor():
         # Define the columns for the df
         columns = list(self.tickers)
         columns.extend(['value', 'cash'])
+
+        # ----------------------------------------------------------------
+
+        start_date, end_date = self.get_start_end_dates(trades)
+
+        # TODO - calculate the number of days between start and end date
+        # TODO - set date range for start_date and end_date
+
+        # ----------------------------------------------------------------
+
         # Choose date range for backtesting with periods being how many days ahead.
-        date_range = pd.bdate_range("20190101", periods=1085)
+        date_range = pd.bdate_range("20130101", periods=10)
         # Create dataframe with index as date fill in values as 0.
         df = pd.DataFrame(index=date_range, columns = columns).fillna(0)
         # Set cash column to inital portfolio cash value
         df['cash'] = self.cash_value
-        data = self.get_yf_data(self.tickers, dt.date(2019,1,1), dt.date(2023,2,23))
+        data = self.get_yf_data(self.tickers, dt.date(2013,1,1), dt.date(2023,2,23))
 
         # Set each value in the dataframe with the quantity of stock bought.
         # BUY
@@ -75,8 +85,21 @@ class PortfolioConstructor():
         tickers.append("AAPL")
         return yf.download(tickers, start_date, end_date, progress=False)
         
+    def get_start_end_dates(self, trades):
+        """Returns the start and end dates for the given trades"""
+        min_start = dt.date.today()
+        max_end = dt.date(1000, 1, 1)
+        for trade in trades:
+            start_date, end_date = trade[4], trade[5]
+            if str(start_date) < str(min_start):
+                min_start = start_date
+            if str(end_date) > str(max_end):
+                max_end = end_date
+
+        return min_start, max_end
+
+
     def print_dataframe(self):
-        print(min(self.df['cash']))
         print(self.df)
 
 
@@ -88,5 +111,5 @@ trades = [
     [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
     ]
 
-# pc = PortfolioConstructor(trades)
+pc = PortfolioConstructor(trades)
 # pc.print_dataframe()
