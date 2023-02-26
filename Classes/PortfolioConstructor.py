@@ -24,22 +24,18 @@ class PortfolioConstructor():
         columns = list(self.tickers)
         columns.extend(['value', 'cash'])
 
-        # ----------------------------------------------------------------
-
+        # FIXME - key error
         start_date, end_date = self.get_start_end_dates(trades)
+        pandas_start_date, pandas_end_date = str(start_date).replace("-", ""), str(end_date).replace("-", "")
 
-        # TODO - calculate the number of days between start and end date
-        # TODO - set date range for start_date and end_date
-
-        # ----------------------------------------------------------------
 
         # Choose date range for backtesting with periods being how many days ahead.
-        date_range = pd.bdate_range("20130101", periods=10)
+        date_range = pd.bdate_range(start=pandas_start_date, end=pandas_end_date)
         # Create dataframe with index as date fill in values as 0.
         df = pd.DataFrame(index=date_range, columns = columns).fillna(0)
         # Set cash column to inital portfolio cash value
         df['cash'] = self.cash_value
-        data = self.get_yf_data(self.tickers, dt.date(2013,1,1), dt.date(2023,2,23))
+        data = self.get_yf_data(self.tickers, start_date, end_date)
 
         # Set each value in the dataframe with the quantity of stock bought.
         # BUY
