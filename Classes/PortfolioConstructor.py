@@ -24,10 +24,9 @@ class PortfolioConstructor():
         columns = list(self.tickers)
         columns.extend(['value', 'cash'])
 
-        # FIXME - key error
+        # Get portfolio start and end dates
         start_date, end_date = self.get_start_end_dates(trades)
         pandas_start_date, pandas_end_date = str(start_date).replace("-", ""), str(end_date).replace("-", "")
-
 
         # Choose date range for backtesting with periods being how many days ahead.
         date_range = pd.bdate_range(start=pandas_start_date, end=pandas_end_date)
@@ -78,34 +77,33 @@ class PortfolioConstructor():
     def get_yf_data(self, tickers, start_date, end_date):
         """Returns a dataframe of tickers for the date range provided"""
         tickers = list(tickers)
+        # Include line below to get rid of temporary bug of only allowing df to be
+        # parsed if there are multiple tickers.
         tickers.append("AAPL")
         return yf.download(tickers, start_date, end_date, progress=False)
         
     def get_start_end_dates(self, trades):
         """Returns the start and end dates for the given trades"""
         min_start = dt.date.today()
-        max_end = dt.date(1000, 1, 1)
+        max_end = dt.date(1950, 1, 2)
         for trade in trades:
             start_date, end_date = trade[4], trade[5]
-            if str(start_date) < str(min_start):
+            if start_date < min_start:
                 min_start = start_date
-            if str(end_date) > str(max_end):
+            if end_date > max_end:
                 max_end = end_date
-
-        return min_start, max_end
-
+        return min_start, max_end + dt.timedelta(days=1)
 
     def print_dataframe(self):
         print(self.df)
 
-
 # UTID:  Ticker:  Quantity:  Leverage: Buy Date:  Sell Date:
-trades = [
-    [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
-    [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
-    [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
-    [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
-    ]
+# trades = [
+#     [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
+#     [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
+#     [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
+#     [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
+#     ]
 
-pc = PortfolioConstructor(trades)
+# pc = PortfolioConstructor(trades)
 # pc.print_dataframe()

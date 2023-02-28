@@ -67,6 +67,7 @@ class SMA_StrategyConstructor():
 #Input in Start date, End date, Ticker, and moving average period 
 st = SMA_StrategyConstructor(dt.date(2019,1,1),dt.date.today(),'GLD',20)
 trades = st.get_trade_order_list()
+print("trades", trades)
 
 cons = PortfolioConstructor(trades)
 cons.print_dataframe()
