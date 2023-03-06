@@ -72,10 +72,8 @@ class PortfolioConstructor():
         """Returns a dataframe of tickers for the date range provided"""
         tickers = list(tickers)
 
-        # Include line below to get rid of temporary bug of only allowing df to be
-        # parsed if there are multiple tickers.
-        if len(tickers) == 1:
-            tickers.append("AAPL")
+        # Append an empty string to handle bug of only one ticker being passed
+        tickers.append("")
             
         return yf.download(tickers, start_date, end_date, progress=False)
         
