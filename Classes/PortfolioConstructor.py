@@ -11,8 +11,6 @@ import yfinance as yf
 import pandas as pd
 import datetime as dt
 
-
-# TODO - implement 'cash' column and leverage
 class PortfolioConstructor():
     def __init__(self, trades):
         super().__init__()
@@ -59,6 +57,7 @@ class PortfolioConstructor():
         # Add up each column to get total value column for each time series.
         for ticker in self.tickers:
             df['value'] += df[ticker]
+
         df['value'] += df['cash']
 
         # Add dataframe as an object attribute.
@@ -66,44 +65,36 @@ class PortfolioConstructor():
 
     def get_tickers(self, trades):
         """Returns a list of tickers for all tickers traded in trades"""
-        tickers = set()
-        for trade in trades:
-            utid, ticker, qty, leverage, buy_date, sell_date = trade
-            if ticker not in tickers:
-                tickers.add(ticker)
-
+        tickers = set([trade[1] for trade in trades])
         return tickers
 
     def get_yf_data(self, tickers, start_date, end_date):
         """Returns a dataframe of tickers for the date range provided"""
         tickers = list(tickers)
+
         # Include line below to get rid of temporary bug of only allowing df to be
         # parsed if there are multiple tickers.
-        tickers.append("AAPL")
+        if len(tickers) == 1:
+            tickers.append("AAPL")
+            
         return yf.download(tickers, start_date, end_date, progress=False)
         
     def get_start_end_dates(self, trades):
         """Returns the start and end dates for the given trades"""
-        min_start = dt.date.today()
-        max_end = dt.date(1950, 1, 2)
-        for trade in trades:
-            start_date, end_date = trade[4], trade[5]
-            if start_date < min_start:
-                min_start = start_date
-            if end_date > max_end:
-                max_end = end_date
-        return min_start, max_end + dt.timedelta(days=1)
+        start_date, end_date = min([trade[4] for trade in trades]), max([trade[5] for trade in trades])
+        return start_date, end_date + dt.timedelta(days=1)
+
 
     def print_dataframe(self):
         print(self.df)
 
 # UTID:  Ticker:  Quantity:  Leverage: Buy Date:  Sell Date:
-# trades = [
-#     [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
-#     [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
-#     [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
-#     [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
-#     ]
+trades = [
+    [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
+    [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
+    [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
+    [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
+    ]
 
-# pc = PortfolioConstructor(trades)
-# pc.print_dataframe()
+pc = PortfolioConstructor(trades)
+pc.print_dataframe()
