@@ -58,8 +58,19 @@ class Strategy:
     def get_min_close_price(self):
         """Returns the max close price"""
         return np.round(self.data['Adj Close'].min(), 2)
+    
+    def vwap(self):
+        """Returns Volume Weighted Average Price"""
+
+        df = pd.DataFrame()
+        # Calculate Typical Price
+        df['TP'] = (self.data['Low'] + self.data['High'] + self.data['Close']) / 3
+        df['VWAP'] = (df['TP'] * self.data['Volume']).cumsum() / self.data['Volume'].cumsum()
+        
+        return df['VWAP']
 
 if __name__ == '__main__':
     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
     plt.plot(s.data["Open"])
+    plt.plot(s.vwap())
     plt.show()
