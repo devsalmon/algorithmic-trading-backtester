@@ -5,7 +5,8 @@ import datetime as dt
 import matplotlib.pyplot as plt
 
 class Strategy:
-    def __init__(self, ticker, start_date, end_date, timeframe):  
+    def __init__(self, ticker, start_date, end_date, timeframe):
+        super().__init__()
         self.start_date = start_date
         self.end_date = end_date      
         self.timeframe = timeframe
@@ -78,10 +79,10 @@ class Strategy:
         change = self.data['Close'].diff()
         return change.loc[str(date)] > 0
 
-if __name__ == '__main__':
-    s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
-    plt.plot(s.data["Open"])
-    print(s.is_up_day(dt.date(2023, 3, 7)))
+# if __name__ == '__main__':
+#     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
+#     plt.plot(s.data["Open"])
+#     print(s.is_up_day(dt.date(2023, 3, 7)))
 
-    plt.plot(s.vwap())
-    plt.show()
+#     plt.plot(s.vwap())
+#     plt.show()
