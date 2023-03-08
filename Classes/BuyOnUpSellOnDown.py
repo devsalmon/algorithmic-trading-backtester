@@ -1,3 +1,9 @@
+import datetime as dt
+import pandas as pd
+import numpy as np
+# From filename import classname
+from Strategy import Strategy
+
 # The strategy will be code which we will get to later, however, what
 # it will output is an dataframe of:
 
@@ -13,8 +19,9 @@ import pandas as pd
 
 from PortfolioConstructor import PortfolioConstructor
 
-class SMA_StrategyConstructor():
-	def __init__(self,start,end,ticker,period):
+class BuyOnUpSellOnDown(Strategy):
+	def __init__(self, ticker, start, end, period):
+		Strategy.__init__(self, ticker, start, end, '1d')
 		self.start_date = start 
 		self.end_date = end
 		self.ticker = ticker
@@ -43,6 +50,7 @@ class SMA_StrategyConstructor():
 		return entry_exit_dates
 
 	def get_trade_order_list(self):
+		# TODO - add in lot sizing
 		trade_order_list = []
 		count = 0
 		if self.entry_exit_dates[-1][0] == "ENTRY":
@@ -54,8 +62,8 @@ class SMA_StrategyConstructor():
 			trade_order_list.append([count,self.ticker,100,1,entry_date.date(),exit_date.date()])
 		return trade_order_list
 
-	def get_signals(self,df):
-		if df['Adj Close'] > df['MA']:
+	def get_signals(self, df):
+		if self.is_up_day(str(df.name)[:-9]):
 			return "BUY"
 		else :
 			return "SELL"
@@ -65,10 +73,9 @@ class SMA_StrategyConstructor():
 			print(trade)
 
 #Input in Start date, End date, Ticker, and moving average period 
-st = SMA_StrategyConstructor(dt.date(2019,1,1),dt.date.today(),'GLD',20)
+st = BuyOnUpSellOnDown("AAPL", dt.date(2019,1,1),dt.date.today(),20)
 trades = st.get_trade_order_list()
-# print("trades", trades)
 
 cons = PortfolioConstructor(trades)
-# cons.print_dataframe()
+cons.print_dataframe()
 # print(trades)

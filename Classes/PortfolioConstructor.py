@@ -90,13 +90,13 @@ class PortfolioConstructor():
     def print_dataframe(self):
         print(self.df)
 
-# UTID:  Ticker:  Quantity:  Leverage: Buy Date:  Sell Date:
-trades = [
-    [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
-    [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
-    [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
-    [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
-    ]
+# # UTID:  Ticker:  Quantity:  Leverage: Buy Date:  Sell Date:
+# trades = [
+#     [1, "AAPL", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)],
+#     [3, "MSFT", 10, 1, dt.date(2013,1,8), dt.date(2013,1,11)],
+#     [4, "AAPL", 10, 1, dt.date(2013,1,8), dt.date(2013,1,14)],
+#     [2, "GBPUSD=X", 10, 1, dt.date(2013,1,2), dt.date(2013,1,4)]
+#     ]
 
-pc = PortfolioConstructor(trades)
-pc.print_dataframe()
+# pc = PortfolioConstructor(trades)
+# pc.print_dataframe()
