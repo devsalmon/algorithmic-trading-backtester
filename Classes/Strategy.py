@@ -57,7 +57,7 @@ class Strategy:
     
     def get_min_close_price(self):
         """Returns the max close price"""
-        return np.round(self.data['Adj Close'].in(), 2)
+        return np.round(self.data['Adj Close'].min(), 2)
 
 if __name__ == '__main__':
     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
