@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 class Strategy:
     def __init__(self, ticker, start_date, end_date, timeframe):  
         self.start_date = start_date
-        self.end_date   = end_date      
-        self.timeframe  = timeframe
+        self.end_date = end_date      
+        self.timeframe = timeframe
 
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
@@ -35,13 +35,13 @@ class Strategy:
     
     def bollingerBands(self, period, numsd):
         """Returns the average, upper and lower bands for Bollinger Bands"""
-        bb_data = pd.DataFrame()
-        bb_data['Average'] = self.data.rolling(window=period)['Adj Close'].mean()
+        df = pd.DataFrame()
+        df['Average'] = self.data.rolling(window=period)['Adj Close'].mean()
         standard_deviation = self.data.rolling(window=period)['Adj Close'].std()
-        bb_data['Upper Band'] = bb_data['Average'] + (standard_deviation * numsd)
-        bb_data['Lower Band'] = bb_data['Average'] - (standard_deviation * numsd)
+        df['Upper Band'] = df['Average'] + (standard_deviation * numsd)
+        df['Lower Band'] = df['Average'] - (standard_deviation * numsd)
 
-        return bb_data
+        return df
 
     def get_max_high_price(self):
         """Returns the max high price"""
@@ -61,16 +61,21 @@ class Strategy:
     
     def vwap(self):
         """Returns Volume Weighted Average Price"""
-
         df = pd.DataFrame()
         # Calculate Typical Price
         df['TP'] = (self.data['Low'] + self.data['High'] + self.data['Close']) / 3
         df['VWAP'] = (df['TP'] * self.data['Volume']).cumsum() / self.data['Volume'].cumsum()
         
         return df['VWAP']
+    
+    def up_days(self):
+        """Returns if the specified day has a positive change"""
+        change = self.data['Close'].diff()
+        return change > 0
 
 if __name__ == '__main__':
     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
     plt.plot(s.data["Open"])
+    print(s.up_days())
     plt.plot(s.vwap())
     plt.show()
