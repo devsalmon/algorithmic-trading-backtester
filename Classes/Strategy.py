@@ -33,13 +33,15 @@ class Strategy:
         """Returns the histogram for MACD"""
         return self.macd() - self.macd_signalLine()
     
-    def bollingerBands(self, length):
-        average = self.data.rolling(window=length)['Adj Close'].mean()
-        standard_deviation = self.data.rolling(window=length)['Adj Close'].std()
-        upper_band = average + (standard_deviation * 2)
-        lower_band = average - (standard_deviation * 2)
+    def bollingerBands(self, period, numsd):
+        """Returns the average, upper and lower bands for Bollinger Bands"""
+        bb_data = pd.DataFrame()
+        bb_data['Average'] = self.data.rolling(window=period)['Adj Close'].mean()
+        standard_deviation = self.data.rolling(window=period)['Adj Close'].std()
+        bb_data['Upper Band'] = bb_data['Average'] + (standard_deviation * numsd)
+        bb_data['Lower Band'] = bb_data['Average'] - (standard_deviation * numsd)
 
-        return average, upper_band, lower_band
+        return bb_data
 
 
 if __name__ == '__main__':
@@ -47,8 +49,5 @@ if __name__ == '__main__':
 
     # sma10 = s.simpleMovingAverage(10)
     plt.plot(s.data["Open"])
-    average, upper_band, lower_band = s.bollingerBands(1)[0], s.bollingerBands(1)[1], s.bollingerBands(1)[2]
-    plt.plot(average)
-    plt.plot(upper_band)
-    plt.plot(lower_band)
+    plt.plot(s.bollingerBands(14, 2))
     plt.show()
