@@ -14,24 +14,41 @@ class Strategy:
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
     def simpleMovingAverage(self, period):
-        """Returns the SMA for the given period on the CLOSE price"""
-        return self.data.rolling(window=period).mean()['Close']
+        """Returns the SMA for the given period"""
+        return self.data.rolling(window=period).mean()['Adj Close']
+    
+    def exponentialMovingAverage(self, period):
+        """Returns the EMA (giving more weight to newer data) for the given period"""
+        return self.data.ewm(span=period).mean()['Adj Close']
+    
+    def macd(self):
+        """Returns the MACD for periods of 12 and 26"""
+        return self.exponentialMovingAverage(12) - self.exponentialMovingAverage(26)
 
-    def bollingerBands(self,period,k):
-        #Returns dataframe of the moving average & lower band & upper band from the CLOSE price
-        df = pd.DataFrame()
-        df['MA'] = self.data['Close'].rolling(window=period).mean()
-        df['Upperband'] = df['MA'] + k*self.data['Close'].rolling(window=period).std()
-        df['Lowerband'] = df['MA'] - k*self.data['Close'].rolling(window=period).std()
-        return df
+    def macd_signalLine(self):
+        """Returns the signal line for the MACD which is an EMA of period 9"""
+        return self.exponentialMovingAverage(9)
+
+    def macd_histogram(self):
+        """Returns the histogram for MACD"""
+        return self.macd() - self.macd_signalLine()
+    
+    def bollingerBands(self, length):
+        average = self.data.rolling(window=length)['Adj Close'].mean()
+        standard_deviation = self.data.rolling(window=length)['Adj Close'].std()
+        upper_band = average + (standard_deviation * 2)
+        lower_band = average - (standard_deviation * 2)
+
+        return average, upper_band, lower_band
+
 
 if __name__ == '__main__':
-    s = Strategy("AAPL", dt.date(2022,1,1), dt.date.today(), '1d')
-    sma10 = s.simpleMovingAverage(10)
-    bb142 = s.bollingerBands(14,2)
-    plt.plot(s.data['Open'])
-    # plt.plot(sma10)
-    plt.plot(bb142)
+    s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
+
+    # sma10 = s.simpleMovingAverage(10)
+    plt.plot(s.data["Open"])
+    average, upper_band, lower_band = s.bollingerBands(1)[0], s.bollingerBands(1)[1], s.bollingerBands(1)[2]
+    plt.plot(average)
+    plt.plot(upper_band)
+    plt.plot(lower_band)
     plt.show()
-
-
