@@ -43,11 +43,23 @@ class Strategy:
 
         return bb_data
 
+    def get_max_high_price(self):
+        """Returns the max high price"""
+        return np.round(self.data['High'].max(), 2)
+
+    def get_min_low_price(self):
+        """Returns the min low price"""
+        return np.round(self.data['Low'].min(), 2)
+    
+    def get_max_close_price(self):
+        """Returns the max close price"""
+        return np.round(self.data['Adj Close'].max(), 2)
+    
+    def get_min_close_price(self):
+        """Returns the max close price"""
+        return np.round(self.data['Adj Close'].in(), 2)
 
 if __name__ == '__main__':
     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
-
-    # sma10 = s.simpleMovingAverage(10)
     plt.plot(s.data["Open"])
-    plt.plot(s.bollingerBands(14, 2))
     plt.show()
