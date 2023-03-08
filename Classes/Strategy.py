@@ -69,13 +69,19 @@ class Strategy:
         return df['VWAP']
     
     def up_days(self):
-        """Returns if the specified day has a positive change"""
+        """Returns true if the day has a +ve change from the previous day, otherwise false"""
         change = self.data['Close'].diff()
         return change > 0
+    
+    def is_up_day(self, date):
+        """Returns if the specified day has a positive change"""
+        change = self.data['Close'].diff()
+        return change.loc[str(date)] > 0
 
 if __name__ == '__main__':
     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
     plt.plot(s.data["Open"])
-    print(s.up_days())
+    print(s.is_up_day(dt.date(2023, 3, 7)))
+
     plt.plot(s.vwap())
     plt.show()
