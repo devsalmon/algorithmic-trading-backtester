@@ -10,6 +10,10 @@
 import yfinance as yf
 import pandas as pd
 import datetime as dt
+import warnings
+
+#Removes data slicing warnings
+warnings.filterwarnings('ignore')
 
 class PortfolioConstructor():
     def __init__(self, trades):
