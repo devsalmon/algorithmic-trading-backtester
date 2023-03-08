@@ -77,7 +77,7 @@ class PortfolioConstructor():
         tickers = list(tickers)
 
         # Append an empty string to handle bug of only one ticker being passed
-        tickers.append("")
+        tickers.append("AAPL")
             
         return yf.download(tickers, start_date, end_date, progress=False)
         
