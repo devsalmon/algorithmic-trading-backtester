@@ -17,9 +17,21 @@ class Strategy:
         """Returns the SMA for the given period on the CLOSE price"""
         return self.data.rolling(window=period).mean()['Close']
 
+    def bollingerBands(self,period,k):
+        #Returns dataframe of the moving average & lower band & upper band from the CLOSE price
+        df = pd.DataFrame()
+        df['MA'] = self.data['Close'].rolling(window=period).mean()
+        df['Upperband'] = df['MA'] + k*self.data['Close'].rolling(window=period).std()
+        df['Lowerband'] = df['MA'] - k*self.data['Close'].rolling(window=period).std()
+        return df
+
 if __name__ == '__main__':
-    s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
+    s = Strategy("AAPL", dt.date(2022,1,1), dt.date.today(), '1d')
     sma10 = s.simpleMovingAverage(10)
+    bb142 = s.bollingerBands(14,2)
     plt.plot(s.data['Open'])
-    plt.plot(sma10)
+    # plt.plot(sma10)
+    plt.plot(bb142)
     plt.show()
+
+
