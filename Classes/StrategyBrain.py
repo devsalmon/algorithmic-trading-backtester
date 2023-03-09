@@ -5,15 +5,59 @@ import datetime as dt
 import matplotlib.pyplot as plt
 
 
-class Strategy:
-    def __init__(self, ticker, start_date, end_date, timeframe):
-        super().__init__()
-        self.start_date = start_date
-        self.end_date = end_date
-        self.timeframe = timeframe
+class StrategyBrain:
+    def __init__(self, ticker, start_date, end_date):
+        # super().__init__()
+        self.backtest_start_date = start_date
+        self.backtest_end_date = end_date
 
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
+
+    # Creates dataframe with columns for all indecators.
+    def get_indicators(self, MA_period):
+        self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
+        self.data["MA"] = self.simpleMovingAverage(MA_period)
+        # TODO all indicators here...
+        return self.data
+
+    # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
+    def get_entry_exit_dates(self, indicators_and_signals_df):
+        entry_exit_dates = []
+        signal_list = list(indicators_and_signals_df["Signal"])
+        dates_list = list(indicators_and_signals_df.index)
+        # Loops through signals and records date at which there is a switch in signal.
+        for i, date in enumerate(dates_list):
+            # Make sure first action is a BUY.
+            if not entry_exit_dates and signal_list[i] == "BUY":
+                entry_exit_dates.append([signal_list[i], date])
+            # On first occurence of a buy or sell, execute that signal.
+            elif signal_list[i] != signal_list[i - 1]:
+                entry_exit_dates.append([signal_list[i], date])
+        # Sell assets on last day if last signal was BUY.
+        if entry_exit_dates[-1][0] == "BUY":
+            entry_exit_dates.append(("SELL", self.backtest_end_date))
+        return entry_exit_dates
+
+    # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
+    # for Portfolio Constructor Class
+    def construct_trades_list(self, entry_exit_dates, ticker):
+        trades_list = []
+        number_of_trades = len(entry_exit_dates) // 2
+        # Step = 2 as the list of entry_exit_dates alternates between buy and sell.
+        for i in range(0, number_of_trades, 2):
+            # [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
+            trades_list.append(
+                [
+                    i // 2,
+                    ticker,
+                    100,
+                    1,
+                    entry_exit_dates[i][1],
+                    entry_exit_dates[i + 1][1],
+                ]
+            )
+        return trades_list
 
     def simpleMovingAverage(self, period):
         """Returns the SMA for the given period"""
