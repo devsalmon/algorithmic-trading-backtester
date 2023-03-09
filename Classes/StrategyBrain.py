@@ -17,7 +17,7 @@ class StrategyBrain:
     # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period):
         self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
-        self.data["MA"] = self.simpleMovingAverage(MA_period)
+        self.data["MA"] = self.simple_moving_average(MA_period)
         # TODO all indicators here...
         return self.data
 
