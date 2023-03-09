@@ -29,9 +29,10 @@ class StrategyBrain:
         # Loops through signals and records date at which there is a switch in signal.
         for i, date in enumerate(dates_list):
             # Make sure first action is a BUY.
-            if not entry_exit_dates and signal_list[i] == "BUY":
-                entry_exit_dates.append([signal_list[i], date])
-            # On first occurence of a buy or sell, execute that signal.
+            if not entry_exit_dates:
+                if signal_list[i] == "BUY":
+                    entry_exit_dates.append([signal_list[i], date])
+            # On first occurence of a buy or sell (after the first buy), execute that signal.
             elif signal_list[i] != signal_list[i - 1]:
                 entry_exit_dates.append([signal_list[i], date])
         # Sell assets on last day if last signal was BUY.
@@ -43,7 +44,7 @@ class StrategyBrain:
     # for Portfolio Constructor Class
     def construct_trades_list(self, entry_exit_dates, ticker):
         trades_list = []
-        number_of_trades = len(entry_exit_dates) // 2
+        number_of_trades = len(entry_exit_dates)
         # Step = 2 as the list of entry_exit_dates alternates between buy and sell.
         for i in range(0, number_of_trades, 2):
             # [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]

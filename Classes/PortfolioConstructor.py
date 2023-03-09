@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 class PortfolioConstructor:
     def __init__(self, trades):
         super().__init__()
-        self.cash_value = 15000
+        self.cash_value = 18000
         # self.portfolio_value = 10_000
 
         self.tickers = self.get_tickers(trades)
