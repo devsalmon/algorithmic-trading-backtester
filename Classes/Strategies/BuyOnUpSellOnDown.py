@@ -2,6 +2,7 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 # From filename import classname
+# TODO NEED TO IMPORT FROM PARENT FOLDER
 from Strategy import Strategy
 
 # The strategy will be code which we will get to later, however, what
