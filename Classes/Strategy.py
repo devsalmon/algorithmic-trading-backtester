@@ -44,7 +44,7 @@ class Strategy:
 
     def macd_histogram(self):
         """Returns the histogram for MACD"""
-        return self.macd() - self.macd_signalLine()
+        return self.macd() - self.macd_signal_line()
     
     def bollinger_bands(self, period, numsd):
         """
