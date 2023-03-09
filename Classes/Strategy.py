@@ -36,11 +36,11 @@ class Strategy:
         
         [https://en.wikipedia.org/wiki/MACD]
         """
-        return self.exponentialMovingAverage(12) - self.exponentialMovingAverage(26)
+        return self.exponential_moving_average(12) - self.exponential_moving_average(26)
 
     def macd_signal_line(self):
         """Returns the signal line for the MACD which is an EMA of period 9"""
-        return self.exponentialMovingAverage(9)
+        return self.exponential_moving_average(9)
 
     def macd_histogram(self):
         """Returns the histogram for MACD"""
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     plt.figure()
     plt.title('Price data')
     plt.plot(s.data["Open"])
-    # plt.plot(s.exponentialMovingAverage(14), c='red')
+    # plt.plot(s.exponential_moving_average(14), c='red')
 
     # plt.plot(s.vwap(), c='black')
     plt.figure()
