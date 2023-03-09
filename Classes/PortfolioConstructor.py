@@ -21,7 +21,6 @@ warnings.filterwarnings("ignore")
 
 
 class PortfolioConstructor:
-class PortfolioConstructor:
     def __init__(self, trades):
         super().__init__()
         self.cash_value = 18000
