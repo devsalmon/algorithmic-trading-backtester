@@ -133,25 +133,20 @@ class Strategy:
         df['TP'] = (self.data['Low'] + self.data['High'] + self.data['Close']) / 3
         # Calculate Raw Money Flow
         df['RMF'] = df['TP'] * self.data['Volume']
-        # Calculate Money Flow Ratio
-            # PMF = Positive Money Flow
-            # NMF = Negative Money Flow
-        df['change'] = df['RMF'].diff()
+        # Calculate Money Flow Ratio where PMF = Positive Money Flow, NMF = Negative Money Flow
+
+        # Calculate the change in typical price from the previous day
+        df['change'] = df['TP'].diff()
+        
         # Calculate the number of days that have a positive and negative change
+        df['1PMF'] = df['RMF'].where(df['change'] >= 0).fillna(0)
+        df['1NMF'] = df['RMF'].where(df['change'] < 0).fillna(0)
 
-        # ----------------------------------------------------------------
+        df['14PMF'] = df['1PMF'].rolling(window=period).sum()
+        df['14NMF'] = df['1NMF'].rolling(window=period).sum()
 
+        df['Money Ratio'] = df['14PMF'] / df['14NMF']
 
-        # FIXME - PMF and NMF
-        # Need to calculate PMF and NMF properly
-
-        df['PMF'] = df['change'].rolling(window=period, min_periods=period-1).apply(lambda x: np.sum(np.where(x >= 0, x, 0.0)))
-        df['NMF'] = df['change'].rolling(window=period, min_periods=period-1).apply(lambda x: np.sum(np.where(x < 0, x, 0.0)))
-
-
-        # ----------------------------------------------------------------
-
-        df['Money Ratio'] = df['PMF'] / df['NMF']
         # Calculate MFI
         df['MFI'] = 100 - (100/(1+df['Money Ratio']))
         return df['MFI']
@@ -176,11 +171,8 @@ if __name__ == '__main__':
     plt.figure()
     plt.title('Price data')
     plt.plot(s.data["Open"])
-    # plt.plot(s.exponentialMovingAverage(14), c='red')
 
-    # plt.plot(s.vwap(), c='black')
     plt.figure()
     plt.title('Indicators')
     plt.plot(s.mfi())
-    # plt.plot(s.rsi(), c='green')
     plt.show()
