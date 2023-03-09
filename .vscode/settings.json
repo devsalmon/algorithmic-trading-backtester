@@ -1,0 +1,6 @@
+{
+  "editor.defaultFormatter": null,
+  "python.analysis.extraPaths": ["./test"],
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+}
