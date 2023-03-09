@@ -3,7 +3,7 @@ from StrategyBrain import StrategyBrain
 from PortfolioConstructor import PortfolioConstructor
 
 
-class Test1(StrategyBrain):
+class TestStrategy1(StrategyBrain):
     def __init__(self, start, end, ticker, MA_period):
         # Instatiates super constructor (for StrategyBrain Class)
         super().__init__(ticker, start, end)
@@ -32,6 +32,7 @@ class Test1(StrategyBrain):
 
 
 # Input in backtesting start date, end date, ticker, and moving average period
-test1_strategy = Test1(dt.date(2019, 1, 1), dt.date(2023, 2, 2), "GLD", 20)
-test1_portfolio = PortfolioConstructor(test1_strategy.trades_list)
+test_strategy_1 = TestStrategy1(dt.date(2019, 1, 1), dt.date(2023, 2, 2), "GLD", 20)
+test_strategy_1.print_trades()
+test1_portfolio = PortfolioConstructor(test_strategy_1.trades_list)
 test1_portfolio.print_dataframe()
