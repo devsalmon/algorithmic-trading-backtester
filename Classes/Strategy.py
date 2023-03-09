@@ -14,7 +14,7 @@ class Strategy:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
-    def simpleMovingAverage(self, period):
+    def simple_moving_average(self, period):
         """
         Returns the SMA for the given period
         
@@ -22,7 +22,7 @@ class Strategy:
         """
         return self.data.rolling(window=period).mean()['Adj Close']
     
-    def exponentialMovingAverage(self, period):
+    def exponential_moving_average(self, period):
         """
         Returns the EMA (giving more weight to newer data) for the given period
 
@@ -38,7 +38,7 @@ class Strategy:
         """
         return self.exponentialMovingAverage(12) - self.exponentialMovingAverage(26)
 
-    def macd_signalLine(self):
+    def macd_signal_line(self):
         """Returns the signal line for the MACD which is an EMA of period 9"""
         return self.exponentialMovingAverage(9)
 
@@ -46,7 +46,7 @@ class Strategy:
         """Returns the histogram for MACD"""
         return self.macd() - self.macd_signalLine()
     
-    def bollingerBands(self, period, numsd):
+    def bollinger_bands(self, period, numsd):
         """
         Returns the average, upper and lower bands for Bollinger Bands
         
@@ -61,19 +61,27 @@ class Strategy:
         return df
 
     def get_max_high_price(self):
-        """Returns the max high price"""
+        """
+        Returns the max high price
+        """
         return np.round(self.data['High'].max(), 2)
 
     def get_min_low_price(self):
-        """Returns the min low price"""
+        """
+        Returns the min low price
+        """
         return np.round(self.data['Low'].min(), 2)
     
     def get_max_close_price(self):
-        """Returns the max close price"""
+        """
+        Returns the max close price
+        """
         return np.round(self.data['Adj Close'].max(), 2)
     
     def get_min_close_price(self):
-        """Returns the min close price"""
+        """
+        Returns the min close price
+        """
         return np.round(self.data['Adj Close'].min(), 2)
     
     def vwap(self):
