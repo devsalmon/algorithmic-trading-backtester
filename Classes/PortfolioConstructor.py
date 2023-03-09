@@ -16,29 +16,20 @@ import warnings
 # Removes data slicing warnings
 warnings.filterwarnings("ignore")
 
-# Removes data slicing warnings
-warnings.filterwarnings("ignore")
-
 
 class PortfolioConstructor:
     def __init__(self, trades):
         super().__init__()
         self.cash_value = 18000
         # self.portfolio_value = 10_000
-        self.cash_value = 15000
-        # self.portfolio_value = 10_000
 
         self.tickers = self.get_tickers(trades)
         # Define the columns for the df
         columns = list(self.tickers)
         columns.extend(["value", "cash"])
-        columns.extend(["value", "cash"])
 
         # Get portfolio start and end dates
         start_date, end_date = self.get_start_end_dates(trades)
-        pandas_start_date, pandas_end_date = str(start_date).replace("-", ""), str(
-            end_date
-        ).replace("-", "")
         pandas_start_date, pandas_end_date = str(start_date).replace("-", ""), str(
             end_date
         ).replace("-", "")
@@ -47,9 +38,7 @@ class PortfolioConstructor:
         date_range = pd.bdate_range(start=pandas_start_date, end=pandas_end_date)
         # Create dataframe with index as date fill in values as 0.
         df = pd.DataFrame(index=date_range, columns=columns).fillna(0)
-        df = pd.DataFrame(index=date_range, columns=columns).fillna(0)
         # Set cash column to inital portfolio cash value
-        df["cash"] = self.cash_value
         df["cash"] = self.cash_value
         data = self.get_yf_data(self.tickers, start_date, end_date)
 
@@ -59,16 +48,12 @@ class PortfolioConstructor:
             utid, ticker, qty, leverage, buy_date, sell_date = trade
             df[ticker].loc[buy_date:sell_date] = qty  # *leverage
 
-            df[ticker].loc[buy_date:sell_date] = qty  # *leverage
-
             # Subtract the value of the trade from cash every buy
-            df["cash"].loc[buy_date:] -= qty * data["Adj Close"][ticker][str(buy_date)]
             df["cash"].loc[buy_date:] -= qty * data["Adj Close"][ticker][str(buy_date)]
 
         # Use price of each stock from the yfinance data and use vectorisation to multiply
         # this by the quantity of the stock we have for each time series.
         for ticker in self.tickers:
-            df[ticker] *= data["Adj Close"][ticker]
             df[ticker] *= data["Adj Close"][ticker]
 
         # SELL
@@ -78,16 +63,11 @@ class PortfolioConstructor:
             df["cash"].loc[sell_date + dt.timedelta(days=1) :] += (
                 qty * data["Adj Close"][ticker][str(sell_date)]
             )
-            df["cash"].loc[sell_date + dt.timedelta(days=1) :] += (
-                qty * data["Adj Close"][ticker][str(sell_date)]
-            )
 
         # Add up each column to get total value column for each time series.
         for ticker in self.tickers:
             df["value"] += df[ticker]
-            df["value"] += df[ticker]
 
-        df["value"] += df["cash"]
         df["value"] += df["cash"]
 
         # Add dataframe as an object attribute.
