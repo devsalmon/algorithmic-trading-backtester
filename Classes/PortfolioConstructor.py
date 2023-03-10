@@ -100,7 +100,7 @@ class PortfolioConstructor:
         print("min cash", min(self.df["cash"]))
 
     def get_portfolio(self):
-        self.df = self.df.rename({'value':'Portfolio Value'}, axis=1)
+        self.df = self.df.rename({'value':'Portfolio Value'}, axis=1).dropna(axis=0)        
         return self.df
 
 

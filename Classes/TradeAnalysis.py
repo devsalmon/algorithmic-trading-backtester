@@ -102,7 +102,7 @@ class TradeAnalysis:
 		for trade in self.trades:
 			print(trade)
 
-	def show_statistics(self):
+	def print_statistics(self):
 		self.format_column('All Trades','Portfolio')
 		print('-----------------------------------------')
 		self.format_column('Frequency',f'{self.get_frequency_of_all_trades()}')
