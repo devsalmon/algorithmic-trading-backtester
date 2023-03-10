@@ -84,7 +84,7 @@ class PortfolioAnalysis:
 		pd.options.display.max_rows = None
 		print(self.timeseries)
 
-	def show_metrics(self):
+	def print_statistics(self):
 		self.display_row('','Portfolio')
 		print('-----------------------------------------')
 		self.display_row("Overview","")

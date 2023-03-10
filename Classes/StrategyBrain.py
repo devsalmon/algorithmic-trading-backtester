@@ -16,8 +16,10 @@ class StrategyBrain:
 
     # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period):
-        self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
+        # self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
         self.data["MA"] = self.simple_moving_average(MA_period)
+        self.data["MACD"] = self.macd()
+        self.data["VWAP"] = self.vwap()
         # TODO all indicators here...
         return self.data
 
@@ -37,7 +39,7 @@ class StrategyBrain:
                 entry_exit_dates.append([signal_list[i], date])
         # Sell assets on last day if last signal was BUY.
         if entry_exit_dates[-1][0] == "BUY":
-            entry_exit_dates.append(("SELL", self.backtest_end_date))
+            entry_exit_dates.append(("SELL", pd.Timestamp(self.backtest_end_date,tz=None)))
         return entry_exit_dates
 
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
