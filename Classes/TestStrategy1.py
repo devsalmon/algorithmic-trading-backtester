@@ -1,6 +1,10 @@
 import datetime as dt
 from StrategyBrain import StrategyBrain
 from PortfolioConstructor import PortfolioConstructor
+from TradeAnalysis import TradeAnalysis
+from PortfolioAnalysis import PortfolioAnalysis
+import pandas as pd
+pd.options.display.max_rows = None
 
 
 class TestStrategy1(StrategyBrain):
@@ -30,9 +34,41 @@ class TestStrategy1(StrategyBrain):
         for trade in self.trades_list:
             print(trade)
 
+    def get_trades(self):
+        return self.trades_list
+
 
 # Input in backtesting start date, end date, ticker, and moving average period
 test_strategy_1 = TestStrategy1(dt.date(2019, 1, 1), dt.date(2023, 2, 2), "GLD", 20)
-test_strategy_1.print_trades()
+# test_strategy_1.print_trades()
 test1_portfolio = PortfolioConstructor(test_strategy_1.trades_list)
-test1_portfolio.print_dataframe()
+# test1_portfolio.print_dataframe()
+portfolio = test1_portfolio.get_portfolio()
+
+
+#Analyse Trades 
+trades = test_strategy_1.get_trades()
+for count, trade in enumerate(trades):
+    try:
+        trades[count][4] = trades[count][4].to_pydatetime().date()
+        trades[count][5] = trades[count][5].to_pydatetime().date()
+    except:
+        pass
+ta = TradeAnalysis(trades)
+ta.show_statistics()
+
+#Analyse Portfolio
+portfolio = portfolio.dropna(axis=0)
+pa = PortfolioAnalysis(portfolio)
+pa.show_metrics()
+
+
+
+
+
+
+
+
+
+
+
