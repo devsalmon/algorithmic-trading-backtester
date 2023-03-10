@@ -92,12 +92,16 @@ class PortfolioConstructor:
         start_date, end_date = min([trade[4] for trade in trades]), max(
             [trade[5] for trade in trades]
         )
-        print(end_date)
+        # print(end_date)
         return start_date, end_date + dt.timedelta(days=1)
 
     def print_dataframe(self):
         print(self.df)
         print("min cash", min(self.df["cash"]))
+
+    def get_portfolio(self):
+        self.df = self.df.rename({'value':'Portfolio Value'}, axis=1).dropna(axis=0)        
+        return self.df
 
 
 # # UTID:  Ticker:  Quantity:  Leverage: Buy Date:  Sell Date:

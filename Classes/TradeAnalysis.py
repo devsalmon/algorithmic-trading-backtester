@@ -13,7 +13,7 @@ class TradeAnalysis:
 		self.return_list = self.get_return_list()
 
 	def construct_main_df(self):
-		tickers = list(dict.fromkeys([x[1] for x in self.trades]))
+		tickers = list(set([x[1] for x in self.trades]))
 		main_df = pd.DataFrame()
 		for ticker in tickers:
 			main_df[ticker] = yf.download(ticker,dt.date(1900,1,1),dt.date.today(),progress=False)['Adj Close']
@@ -102,7 +102,7 @@ class TradeAnalysis:
 		for trade in self.trades:
 			print(trade)
 
-	def show_statistics(self):
+	def print_statistics(self):
 		self.format_column('All Trades','Portfolio')
 		print('-----------------------------------------')
 		self.format_column('Frequency',f'{self.get_frequency_of_all_trades()}')
