@@ -2,7 +2,6 @@ import yfinance as yf
 import datetime as dt
 import pandas as pd
 import scipy.stats as st
-
 # import plotly.graph_objects as go
 # 1465, 2019-02-30
 
@@ -20,13 +19,22 @@ class PortfolioAnalysis:
         self.end_date = self.timeseries.index[-1]
         self.risk_free_rate = 0.04
 
+    def get_time_period(self):
+        return (self.end_date - self.start_date).days
+
     def get_inital_capital(self):
         inital_capital = self.timeseries["Portfolio Value"].iloc[0]
-        return inital_capital
+        return round(inital_capital,2)
 
     def get_ending_capital(self):
         ending_capital = self.timeseries["Portfolio Value"].iloc[-1]
         return round(ending_capital, 2)
+
+    def get_peak_equity(self):
+        return round(max(self.timeseries['Portfolio Value']),1)
+
+    def get_trough_equity(self):
+        return round(min(self.timeseries['Portfolio Value']),1)
 
     def get_net_profit(self):
         net_profit = self.get_ending_capital() - self.get_inital_capital()
@@ -104,7 +112,10 @@ class PortfolioAnalysis:
         self.display_row("Overview", "")
         self.display_row("Start Date", self.start_date.date())
         self.display_row("End Date", self.end_date.date())
+        self.display_row("Time Period", f'{self.get_time_period()} Days')
         self.display_row("Initial Capital", f"${self.get_inital_capital()}")
+        self.display_row("Peak Equity", f"${self.get_peak_equity()}")
+        self.display_row("Trough Equity", f"${self.get_trough_equity()}")
         self.display_row("Ending Capital", f"${self.get_ending_capital()}")
         self.display_row("Net Profits", f"${self.get_net_profit()}")
         self.display_row("Net Profits%", f"{self.get_net_profit_percentage()}%")
