@@ -3,3 +3,4 @@ Classes/__pycache__/PortfolioConstructor.cpython-38.pyc
 Classes/__pycache__/StrategyBrain.cpython-38.pyc
 Classes/__pycache__/TestStrategy1.cpython-38.pyc
 Classes/__pycache__/TradeAnalysis.cpython-38.pyc
+*.pyc
