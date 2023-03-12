@@ -11,6 +11,8 @@ class TradeAnalysis:
 		self.trades = trades
 		self.main_df = self.construct_main_df()
 		self.return_list = self.get_return_list()
+		self.positive_return_list = [returns for returns in self.return_list if returns > 0]
+		self.negative_return_list = [returns for returns in self.return_list if returns <= 0]
 
 	def construct_main_df(self):
 		tickers = list(set([trade[1] for trade in self.trades]))
@@ -26,12 +28,10 @@ class TradeAnalysis:
 		return len(self.trades)
 
 	def get_frequency_of_winning_trades(self):
-		positive_return_list = [x for x in self.return_list if x > 0]
-		return len(positive_return_list)
+		return len(self.positive_return_list)
 
 	def get_frequency_of_losing_trades(self):
-		negative_return_list = [x for x in self.return_list if x <= 0]
-		return len(negative_return_list)
+		return len(self.negative_return_list)
 
 	def get_average_length(self):
 		length_list = []
@@ -71,8 +71,7 @@ class TradeAnalysis:
 		return round(average_returns,2)
 
 	def get_win_rate(self):
-		positive_return_list = [x for x in self.return_list if x > 0]
-		win_rate = 100*(len(positive_return_list)/len(self.return_list))
+		win_rate = 100*(len(self.positive_return_list)/len(self.return_list))
 		return round(win_rate,2)
 
 	def get_loss_rate(self):
@@ -80,13 +79,11 @@ class TradeAnalysis:
 		return loss_rate
 
 	def get_average_win_returns(self):
-		positive_return_list = [x for x in self.return_list if x > 0]
-		average_win_returns = np.mean(positive_return_list)
+		average_win_returns = np.mean(self.positive_return_list)
 		return round(average_win_returns,2)
 
 	def get_average_loss_return(self):
-		negative_return_list = [x for x in self.return_list if x <= 0]
-		average_loss_returns = np.mean(negative_return_list)
+		average_loss_returns = np.mean(self.negative_return_list)
 		return round(average_loss_returns,2)
 
 	def format_column(self,input_one,input_two):
