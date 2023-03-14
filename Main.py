@@ -1,7 +1,7 @@
-from TestStrategy1 import TestStrategy1
-from PortfolioConstructor import PortfolioConstructor 
-from TradeAnalysis import TradeAnalysis
-from PortfolioAnalysis import PortfolioAnalysis
+from Strategies.TestStrategy1 import TestStrategy1
+from Classes.PortfolioConstructor import PortfolioConstructor
+from Classes.TradeAnalysis import TradeAnalysis
+from Classes.PortfolioAnalysis import PortfolioAnalysis
 import datetime as dt
 
 
