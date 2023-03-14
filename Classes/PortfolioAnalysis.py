@@ -17,7 +17,7 @@ class PortfolioAnalysis:
         self.timeseries = portfolio
         self.start_date = self.timeseries.index[0]
         self.end_date = self.timeseries.index[-1]
-        self.risk_free_rate = 0.04
+        self.risk_free_rate = 4
 
     def get_time_period(self):
         return (self.end_date - self.start_date).days
@@ -68,17 +68,11 @@ class PortfolioAnalysis:
 
     def get_annual_downside_deviation(self):
         df = self.timeseries
-        df["PercentageChange"] = 100 * df["Portfolio Value"].pct_change()
-        average_daily_returns = df["PercentageChange"].mean()
-        downside_deviation_list = []
-        for deviation in list(df["PercentageChange"]):
-            if deviation < 0:
-                downside_deviation_list.append((deviation - average_daily_returns) ** 2)
-        n = len(df.index)
-        annualised_downside_deviation = round(
-            ((sum(downside_deviation_list) / (n - 1)) ** 0.5) * (256**0.2), 2
-        )
-        return annualised_downside_deviation
+        df["PercentageChange"] = df["Portfolio Value"].pct_change()
+        df['NegativePercentageChange'] = df['PercentageChange'].where(df['PercentageChange']<0)
+        df = df.dropna(axis=0)
+        annualised_downside_deviation = 100*df['NegativePercentageChange'].std() * (252**0.5)
+        return round(annualised_downside_deviation,2)
 
     def get_sortino_ratio(self):
         sortino_ratio = round(
