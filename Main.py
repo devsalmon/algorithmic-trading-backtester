@@ -19,3 +19,5 @@ trade_analysis.print_statistics()
 # 5. Calculate portfolio statistics and print.
 portfolio_analysis = PortfolioAnalysis(strategy_portfolio)
 portfolio_analysis.print_statistics()
+
+

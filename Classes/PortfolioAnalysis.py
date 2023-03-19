@@ -136,7 +136,11 @@ class PortfolioAnalysis:
 
     def get_average_drawdown_period(self):
         average_drawdown_period = np.round(np.mean([element[2] for element in self.drawdown_list]),0)
-        return average_drawdown_period
+        return int(average_drawdown_period)
+
+    def get_calmar_ratio(self):
+        calmar_ratio = round((self.get_annual_return()-self.risk_free_rate)/self.get_maximum_drawdown(),2)
+        return calmar_ratio
 
     def get_var95(self):
         df = self.timeseries
@@ -179,6 +183,7 @@ class PortfolioAnalysis:
         self.display_row("Risk Adjusted Return", "")
         self.display_row("Sharpe Ratio", self.get_sharpe_ratio())
         self.display_row("Sortino Ratio", self.get_sortino_ratio())
+        self.display_row("Calmar Ratio", self.get_calmar_ratio())
         print("-----------------------------------------")
         self.display_row("Drawdown Analysis", "")
         self.display_row("Max Drawdown", f'{self.get_maximum_drawdown()}%')
