@@ -1,9 +1,10 @@
 import datetime as dt
-from StrategyBrain import StrategyBrain
-from PortfolioConstructor import PortfolioConstructor
-from TradeAnalysis import TradeAnalysis
-from PortfolioAnalysis import PortfolioAnalysis
+from Classes.StrategyBrain import StrategyBrain
+from Classes.PortfolioConstructor import PortfolioConstructor
+from Classes.TradeAnalysis import TradeAnalysis
+from Classes.PortfolioAnalysis import PortfolioAnalysis
 import pandas as pd
+
 pd.options.display.max_rows = None
 
 
@@ -46,7 +47,7 @@ class TestStrategy1(StrategyBrain):
 # portfolio = test1_portfolio.get_portfolio()
 
 
-# #Analyse Trades 
+# #Analyse Trades
 # trades = test_strategy_1.get_trades()
 # ta = TradeAnalysis(trades)
 # ta.show_statistics()
@@ -54,14 +55,3 @@ class TestStrategy1(StrategyBrain):
 # #Analyse Portfolio
 # pa = PortfolioAnalysis(portfolio)
 # pa.show_metrics()
-
-
-
-
-
-
-
-
-
-
-

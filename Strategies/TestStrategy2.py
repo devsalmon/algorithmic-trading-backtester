@@ -1,6 +1,6 @@
 import datetime as dt
-from StrategyBrain import StrategyBrain
-from PortfolioConstructor import PortfolioConstructor
+from Classes.StrategyBrain import StrategyBrain
+from Classes.PortfolioConstructor import PortfolioConstructor
 
 
 class TestStrategy2(StrategyBrain):
