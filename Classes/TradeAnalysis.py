@@ -86,6 +86,18 @@ class TradeAnalysis:
 		average_loss_returns = np.mean(self.negative_return_list)
 		return round(average_loss_returns,2)
 
+	def get_best_winning_trade(self):
+		return np.round(np.max(self.positive_return_list))
+
+	def get_worst_winning_trade(self):
+		return np.round(np.min(self.positive_return_list),2)
+
+	def get_best_losing_trade(self):
+		return np.round(np.max(self.negative_return_list))
+
+	def get_worst_losing_trade(self):
+		return np.round(np.min(self.negative_return_list),2)
+
 	def format_column(self,input_one,input_two):
 		input_one, input_two = str(input_one), str(input_two)
 		while len(input_one) != 30:
@@ -110,12 +122,16 @@ class TradeAnalysis:
 		self.format_column('Average Length',f'{self.get_average_winning_length()} Days')
 		self.format_column('Win Rate',f'{self.get_win_rate()} %')
 		self.format_column("Average Win Return",f'{self.get_average_win_returns()} %')
+		self.format_column('Best Trade',f'{self.get_best_winning_trade()} %')
+		self.format_column('Worst Trade',f'{self.get_worst_winning_trade()} %')
 		print('-----------------------------------------')
 		self.format_column('Losing Trades','')
 		self.format_column('Frequency',f'{self.get_frequency_of_losing_trades()}')
 		self.format_column('Average Length',f'{self.get_average_losing_length()} Days')
 		self.format_column('Loss Rate',f'{self.get_loss_rate()} %')
 		self.format_column('Average Loss Return',f'{self.get_average_loss_return()} %')
+		self.format_column('Best Trade',f'{self.get_best_losing_trade()} %')
+		self.format_column('Worst Trade',f'{self.get_worst_losing_trade()} %')
 		print('-----------------------------------------')
 
 
@@ -127,7 +143,6 @@ class TradeAnalysis:
 #Enter in trade analysis 
 # ta = TradeAnalysis(trades)
 # ta.show_statistics()
-
 
 
 
