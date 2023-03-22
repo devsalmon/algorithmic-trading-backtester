@@ -29,12 +29,9 @@ class PortfolioConstructor:
 
         # Get portfolio start and end dates
         start_date, end_date = self.get_start_end_dates(trades)
-        pandas_start_date, pandas_end_date = str(start_date).replace("-", ""), str(
-            end_date
-        ).replace("-", "")
 
         # Choose date range for backtesting with periods being how many days ahead.
-        date_range = pd.bdate_range(start=pandas_start_date, end=pandas_end_date)
+        date_range = pd.bdate_range(start=start_date, end=end_date)
         # Create dataframe with index as date fill in values as 0.
         df = pd.DataFrame(index=date_range, columns=columns).fillna(0)
         # Set cash column to inital portfolio cash value
@@ -91,7 +88,6 @@ class PortfolioConstructor:
         start_date, end_date = min([trade[4] for trade in trades]), max(
             [trade[5] for trade in trades]
         )
-        # print(end_date)
         return start_date, end_date + dt.timedelta(days=1)
 
     def print_dataframe(self):
