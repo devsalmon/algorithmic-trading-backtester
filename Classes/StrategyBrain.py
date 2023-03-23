@@ -39,7 +39,9 @@ class StrategyBrain:
                 entry_exit_dates.append([signal_list[i], date])
         # Sell assets on last day if last signal was BUY.
         if entry_exit_dates[-1][0] == "BUY":
-            entry_exit_dates.append(("SELL", pd.Timestamp(self.backtest_end_date,tz=None)))
+            entry_exit_dates.append(
+                ("SELL", pd.Timestamp(self.backtest_end_date, tz=None))
+            )
         return entry_exit_dates
 
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
@@ -61,6 +63,8 @@ class StrategyBrain:
                 ]
             )
         return trades_list
+
+    # def next, buy and sell
 
     def simple_moving_average(self, period):
         """
