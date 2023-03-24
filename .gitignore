@@ -6,3 +6,5 @@ Classes/__pycache__/TradeAnalysis.cpython-38.pyc
 *.pyc
 Classes/__pycache__/PortfolioAnalysis.cpython-38.pyc
 Classes/__pycache__/TradeAnalysis.cpython-38.pyc
+Classes/__pycache__
+Strategies/__pycache__

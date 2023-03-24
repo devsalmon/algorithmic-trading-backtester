@@ -16,28 +16,30 @@ class StrategyBrain:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
-    #Loop through each day of trading, applying the next function each day    
-    def day_by_day(self,func):
-        every_day_dict = self.data.reset_index().to_dict(orient='records')
+    # Loop through each day of trading, applying the next function each day
+    def day_by_day(self, func):
+        every_day_dict = self.data.reset_index().to_dict(orient="records")
         for day_data in every_day_dict:
             func(day_data)
-        self.check_for_stub_period() 
+        self.check_for_stub_period()
 
-    #Check if the last trade has been closed, if it hasn't a final sell signal is appended
-    #TODO (fix issue where trade can be closed on a weekend)
+    # Check if the last trade has been closed, if it hasn't a final sell signal is appended
+    # TODO (fix issue where trade can be closed on a weekend)
     def check_for_stub_period(self):
-        if self.entry_exit_dates[-1][0] == 'Buy':
-            self.entry_exit_dates.append(('Sell', pd.Timestamp(self.backtest_end_date,tz=None).date()))
+        if self.entry_exit_dates[-1][0] == "Buy":
+            self.entry_exit_dates.append(
+                ("Sell", pd.Timestamp(self.backtest_end_date, tz=None).date())
+            )
 
-    #Appends a buy signal to entry_exit_dates with a tuple ('Sell',date)
-    def buy(self,date):
-        self.entry_exit_dates.append(('Buy',date.date()))
+    # Appends a buy signal to entry_exit_dates with a tuple ('Sell',date)
+    def buy(self, date):
+        self.entry_exit_dates.append(("Buy", date.date()))
         self.in_position = True
 
-    #Appends a sell signal to exit entry dates with a tuple ('Sell',date)
-    def sell(self,date):
+    # Appends a sell signal to exit entry dates with a tuple ('Sell',date)
+    def sell(self, date):
         self.in_position = False
-        self.entry_exit_dates.append(('Sell',date.date()))
+        self.entry_exit_dates.append(("Sell", date.date()))
 
     # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period):
@@ -48,8 +50,6 @@ class StrategyBrain:
         # TODO all indicators here...
         return self.data
 
-<<<<<<< HEAD
-=======
     # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
     def get_entry_exit_dates(self, indicators_and_signals_df):
         entry_exit_dates = []
@@ -71,7 +71,6 @@ class StrategyBrain:
             )
         return entry_exit_dates
 
->>>>>>> 543f43a6e388fac5c63d40b49eead26170466838
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
     # for Portfolio Constructor Class
     def construct_trades_list(self, entry_exit_dates, ticker):
@@ -93,6 +92,12 @@ class StrategyBrain:
         return trades_list
 
     # def next, buy and sell
+
+    def crossover(self, oc, indicator1, indicator2, date):
+        """
+        Checks for a crossover between indicator1 and indicator2 on the specified date
+        """
+        prev_date = date - dt.timedelta(days=1)
 
     def simple_moving_average(self, period):
         """
@@ -119,11 +124,15 @@ class StrategyBrain:
         return self.exponential_moving_average(12) - self.exponential_moving_average(26)
 
     def macd_signal_line(self):
-        """Returns the signal line for the MACD which is an EMA of period 9"""
+        """
+        Returns the signal line for the MACD which is an EMA of period 9
+        """
         return self.exponential_moving_average(9)
 
     def macd_histogram(self):
-        """Returns the histogram for MACD"""
+        """
+        Returns the histogram for MACD
+        """
         return self.macd() - self.macd_signal_line()
 
     def bollinger_bands(self, period, numsd):
@@ -141,19 +150,27 @@ class StrategyBrain:
         return df
 
     def get_max_high_price(self):
-        """Returns the max high price"""
+        """
+        Returns the max high price
+        """
         return np.round(self.data["High"].max(), 2)
 
     def get_min_low_price(self):
-        """Returns the min low price"""
+        """
+        Returns the min low price
+        """
         return np.round(self.data["Low"].min(), 2)
 
     def get_max_close_price(self):
-        """Returns the max close price"""
+        """
+        Returns the max close price
+        """
         return np.round(self.data["Adj Close"].max(), 2)
 
     def get_min_close_price(self):
-        """Returns the min close price"""
+        """
+        Returns the min close price
+        """
         return np.round(self.data["Adj Close"].min(), 2)
 
     def vwap(self):
@@ -250,20 +267,19 @@ class StrategyBrain:
         return change.loc[str(date)] > 0
 
 
-
 class Strategy(StrategyBrain):
-    def __init__(self,ticker,start,end):
-         super().__init__(ticker, start, end)
-         self.data['MA1'] = self.simple_moving_average(14)
-         self.data['MA2'] = self.simple_moving_average(28)
-         self.day_by_day(self.next)
-         self.trades_list = self.construct_trades_list(self.entry_exit_dates, ticker)
+    def __init__(self, ticker, start, end):
+        super().__init__(ticker, start, end)
+        self.data["MA1"] = self.simple_moving_average(14)
+        self.data["MA2"] = self.simple_moving_average(28)
+        self.day_by_day(self.next)
+        self.trades_list = self.construct_trades_list(self.entry_exit_dates, ticker)
 
-    def next(self,today):
-        if today['MA1'] > today['MA2'] and self.in_position == False:
-            self.buy(today['Date'])
-        elif today['MA1'] <= today['MA2'] and self.in_position == True:
-            self.sell(today['Date'])
+    def next(self, today):
+        if today["MA1"] > today["MA2"] and self.in_position == False:
+            self.buy(today["Date"])
+        elif today["MA1"] <= today["MA2"] and self.in_position == True:
+            self.sell(today["Date"])
 
     def print_trades(self):
         for trade in self.trades_list:
@@ -273,10 +289,13 @@ class Strategy(StrategyBrain):
         return self.trades_list
 
 
-# st = Strategy('GLD',dt.date(2020,1,1),dt.date.today())
+st = StrategyBrain("GLD", dt.date(2020, 1, 1), dt.date.today())
+print(
+    st.crossover(
+        "Close",
+        st.simple_moving_average(10),
+        st.simple_moving_average(15),
+        dt.date.today(),
+    )
+)
 # st.print_trades()
-
-
-
-
-
