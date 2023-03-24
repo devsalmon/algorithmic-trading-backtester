@@ -48,6 +48,30 @@ class StrategyBrain:
         # TODO all indicators here...
         return self.data
 
+<<<<<<< HEAD
+=======
+    # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
+    def get_entry_exit_dates(self, indicators_and_signals_df):
+        entry_exit_dates = []
+        signal_list = list(indicators_and_signals_df["Signal"])
+        dates_list = list(indicators_and_signals_df.index)
+        # Loops through signals and records date at which there is a switch in signal.
+        for i, date in enumerate(dates_list):
+            # Make sure first action is a BUY.
+            if not entry_exit_dates:
+                if signal_list[i] == "BUY":
+                    entry_exit_dates.append([signal_list[i], date])
+            # On first occurence of a buy or sell (after the first buy), execute that signal.
+            elif signal_list[i] != signal_list[i - 1]:
+                entry_exit_dates.append([signal_list[i], date])
+        # Sell assets on last day if last signal was BUY.
+        if entry_exit_dates[-1][0] == "BUY":
+            entry_exit_dates.append(
+                ("SELL", pd.Timestamp(self.backtest_end_date, tz=None))
+            )
+        return entry_exit_dates
+
+>>>>>>> 543f43a6e388fac5c63d40b49eead26170466838
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
     # for Portfolio Constructor Class
     def construct_trades_list(self, entry_exit_dates, ticker):
@@ -67,6 +91,8 @@ class StrategyBrain:
                 ]
             )
         return trades_list
+
+    # def next, buy and sell
 
     def simple_moving_average(self, period):
         """
