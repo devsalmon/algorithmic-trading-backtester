@@ -10,9 +10,34 @@ class StrategyBrain:
         # super().__init__()
         self.backtest_start_date = start_date
         self.backtest_end_date = end_date
+        self.in_position = False
+        self.entry_exit_dates = []
 
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
+
+    #Loop through each day of trading, applying the next function each day    
+    def day_by_day(self,func):
+        every_day_dict = self.data.reset_index().to_dict(orient='records')
+        for day_data in every_day_dict:
+            func(day_data)
+        self.check_for_stub_period() 
+
+    #Check if the last trade has been closed, if it hasn't a final sell signal is appended
+    #TODO (fix issue where trade can be closed on a weekend)
+    def check_for_stub_period(self):
+        if self.entry_exit_dates[-1][0] == 'Buy':
+            self.entry_exit_dates.append(('Sell', pd.Timestamp(self.backtest_end_date,tz=None).date()))
+
+    #Appends a buy signal to entry_exit_dates with a tuple ('Sell',date)
+    def buy(self,date):
+        self.entry_exit_dates.append(('Buy',date.date()))
+        self.in_position = True
+
+    #Appends a sell signal to exit entry dates with a tuple ('Sell',date)
+    def sell(self,date):
+        self.in_position = False
+        self.entry_exit_dates.append(('Sell',date.date()))
 
     # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period):
@@ -22,25 +47,6 @@ class StrategyBrain:
         self.data["VWAP"] = self.vwap()
         # TODO all indicators here...
         return self.data
-
-    # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
-    def get_entry_exit_dates(self, indicators_and_signals_df):
-        entry_exit_dates = []
-        signal_list = list(indicators_and_signals_df["Signal"])
-        dates_list = list(indicators_and_signals_df.index)
-        # Loops through signals and records date at which there is a switch in signal.
-        for i, date in enumerate(dates_list):
-            # Make sure first action is a BUY.
-            if not entry_exit_dates:
-                if signal_list[i] == "BUY":
-                    entry_exit_dates.append([signal_list[i], date])
-            # On first occurence of a buy or sell (after the first buy), execute that signal.
-            elif signal_list[i] != signal_list[i - 1]:
-                entry_exit_dates.append([signal_list[i], date])
-        # Sell assets on last day if last signal was BUY.
-        if entry_exit_dates[-1][0] == "BUY":
-            entry_exit_dates.append(("SELL", pd.Timestamp(self.backtest_end_date,tz=None)))
-        return entry_exit_dates
 
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
     # for Portfolio Constructor Class
@@ -218,10 +224,33 @@ class StrategyBrain:
         return change.loc[str(date)] > 0
 
 
-# if __name__ == '__main__':
-#     s = Strategy("AAPL", dt.date(2023,1,1), dt.date.today(), '1d')
-#     plt.plot(s.data["Open"])
-#     print(s.is_up_day(dt.date(2023, 3, 7)))
 
-#     plt.plot(s.vwap())
-#     plt.show()
+class Strategy(StrategyBrain):
+    def __init__(self,ticker,start,end):
+         super().__init__(ticker, start, end)
+         self.data['MA1'] = self.simple_moving_average(14)
+         self.data['MA2'] = self.simple_moving_average(28)
+         self.day_by_day(self.next)
+         self.trades_list = self.construct_trades_list(self.entry_exit_dates, ticker)
+
+    def next(self,today):
+        if today['MA1'] > today['MA2'] and self.in_position == False:
+            self.buy(today['Date'])
+        elif today['MA1'] <= today['MA2'] and self.in_position == True:
+            self.sell(today['Date'])
+
+    def print_trades(self):
+        for trade in self.trades_list:
+            print(trade)
+
+    def get_trades(self):
+        return self.trades_list
+
+
+# st = Strategy('GLD',dt.date(2020,1,1),dt.date.today())
+# st.print_trades()
+
+
+
+
+
