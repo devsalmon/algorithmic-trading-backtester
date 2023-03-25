@@ -16,6 +16,23 @@ class StrategyBrain:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
+    '''Function that takes in two columns in self.df and returns True/False in the case of a crossover'''
+    def crossover(self,date,column_one,column_two):
+        #Check for the position of the date in self.df
+        position = list(self.data.index.date).index(date)
+        
+        '''Return a False on the first row'''
+        if position == 0:
+            return False
+        elif position != 0:
+            '''Get the price of first and second column on the given date and the day before'''
+            first_column_today, first_column_yeserday = self.data[column_one].iloc[position], self.data[column_one].iloc[position-1]
+            second_column_today, second_column_yesterday = self.data[column_two].iloc[position], self.data[column_two].iloc[position-1]
+
+            '''Check for crossover and return True in the case of a crossover'''
+            if first_column_today > second_column_today and first_column_yeserday < second_column_yesterday:
+                return True
+
     #Loop through each day of trading, applying the next function each day    
     def day_by_day(self,func):
         every_day_dict = self.data.reset_index().to_dict(orient='records')
@@ -48,8 +65,6 @@ class StrategyBrain:
         # TODO all indicators here...
         return self.data
 
-<<<<<<< HEAD
-=======
     # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
     def get_entry_exit_dates(self, indicators_and_signals_df):
         entry_exit_dates = []
@@ -71,7 +86,6 @@ class StrategyBrain:
             )
         return entry_exit_dates
 
->>>>>>> 543f43a6e388fac5c63d40b49eead26170466838
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
     # for Portfolio Constructor Class
     def construct_trades_list(self, entry_exit_dates, ticker):
@@ -273,6 +287,30 @@ class Strategy(StrategyBrain):
         return self.trades_list
 
 
+class TestStrategy3(StrategyBrain):
+    def __init__(self,ticker,start,end):
+        # Instatiates super constructor (for StrategyBrain Class)
+         super().__init__(ticker, start, end)
+
+         #Adds two moving average indicators to the data dataframe
+         self.data['MA1'] = self.simple_moving_average(14)
+         self.data['MA2'] = self.simple_moving_average(28)
+
+         #Input my next method into the day_by_day function that itterates this method every day
+         self.day_by_day(self.next)
+
+         #Turns a list of buy and sell signals into a set of trades
+         self.trades_list = self.construct_trades_list(self.entry_exit_dates, ticker)
+
+    #This method will be run every trading day. 
+    def next(self,today):
+        if self.crossover(today['Date'],'MA1','MA2') == True and self.in_position == False:
+            self.buy(today['Date'])
+        elif self.crossover(today['Date'],'MA2','MA1') == True and self.in_position == True:
+            self.sell(today['Date'])
+
+    def get_trades(self):
+        return self.trades_list
 # st = Strategy('GLD',dt.date(2020,1,1),dt.date.today())
 # st.print_trades()
 
