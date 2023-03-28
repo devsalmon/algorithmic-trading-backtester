@@ -25,7 +25,7 @@ class TestStrategy4(StrategyBrain):
 
     # This method will be run every trading day.
     def next(self, today):
-        self.stop_loss(today["Date"], 1)
+        # self.stop_loss(today["Date"], 1)
         # self.take_profit(today["Date"], 1)
         if (
             self.crossover(today["Date"], "MA1", "MA2") == True

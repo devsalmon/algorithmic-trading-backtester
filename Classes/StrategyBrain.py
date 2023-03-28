@@ -72,18 +72,20 @@ class StrategyBrain:
         self.entry_exit_dates.append(("Sell", date.date()))
 
     def stop_loss(self, date, limit_percentage):
-        current_close = self.data.loc[date, "Adj Close"]
-        drawdown = (
-            (self.last_entry_price - current_close) / self.last_entry_price
-        ) * 100
-        if drawdown > limit_percentage:
-            self.sell(date)
+        if self.in_position:
+            current_close = self.data.loc[date, "Adj Close"]
+            drawdown = (
+                (self.last_entry_price - current_close) / self.last_entry_price
+            ) * 100
+            if drawdown > limit_percentage:
+                self.sell(date)
 
     def take_profit(self, date, take_profit_percentage):
-        current_close = self.data.loc[date, "Adj Close"]
-        rise = ((current_close - self.last_entry_price) / self.last_entry_price) * 100
-        if rise > take_profit_percentage:
-            self.sell(date)
+        if self.in_position:
+            current_close = self.data.loc[date, "Adj Close"]
+            rise = ((current_close - self.last_entry_price) / self.last_entry_price) * 100
+            if rise > take_profit_percentage:
+                self.sell(date)
 
     # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period):
@@ -291,5 +293,6 @@ class StrategyBrain:
         """
         change = self.data["Close"].diff()
         return change.loc[str(date)] > 0
+
 
 
