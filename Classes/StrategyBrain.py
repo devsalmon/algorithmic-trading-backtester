@@ -298,3 +298,6 @@ class StrategyBrain:
         """
         change = self.data["Close"].diff()
         return change.loc[str(date)] > 0
+
+    def get_indicator_df(self):
+        return self.data
