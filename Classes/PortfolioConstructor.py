@@ -11,13 +11,16 @@ import yfinance as yf
 import pandas as pd
 import datetime as dt
 import warnings
+import typing
 
 # Removes data slicing warnings
 warnings.filterwarnings("ignore")
 
 
 class PortfolioConstructor:
-    def __init__(self, trades):
+    """Creates a portfolio and displays the value of the portfolio at any given day"""
+
+    def __init__(self, trades: list):
         super().__init__()
         self.cash_value = 18000
         # self.portfolio_value = 10_000
@@ -69,12 +72,14 @@ class PortfolioConstructor:
         # Add dataframe as an object attribute.
         self.df = df
 
-    def get_tickers(self, trades):
+    def get_tickers(self, trades: list) -> list:
         """Returns a list of tickers for all tickers traded in trades"""
         tickers = set([trade[1] for trade in trades])
         return tickers
 
-    def get_yf_data(self, tickers, start_date, end_date):
+    def get_yf_data(
+        self, tickers: list, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         """Returns a dataframe of tickers for the date range provided"""
         tickers = list(tickers)
 
@@ -83,19 +88,19 @@ class PortfolioConstructor:
 
         return yf.download(tickers, start_date, end_date, progress=False)
 
-    def get_start_end_dates(self, trades):
+    def get_start_end_dates(self, trades: list) -> dt:
         """Returns the start and end dates for the given trades"""
         start_date, end_date = min([trade[4] for trade in trades]), max(
             [trade[5] for trade in trades]
         )
         return start_date, end_date + dt.timedelta(days=1)
 
-    def print_dataframe(self):
+    def print_dataframe(self) -> None:
         print(self.df)
         print("min cash", min(self.df["cash"]))
 
-    def get_portfolio(self):
-        self.df = self.df.rename({'value':'Portfolio Value'}, axis=1).dropna(axis=0)        
+    def get_portfolio(self) -> pd.DataFrame:
+        self.df = self.df.rename({"value": "Portfolio Value"}, axis=1).dropna(axis=0)
         return self.df
 
 

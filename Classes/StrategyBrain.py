@@ -3,10 +3,11 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
+import typing
 
 
 class StrategyBrain:
-    def __init__(self, ticker, start_date, end_date):
+    def __init__(self, ticker: str, start_date: dt, end_date: dt):
         # super().__init__()
         self.backtest_start_date = start_date
         self.backtest_end_date = end_date
@@ -20,7 +21,9 @@ class StrategyBrain:
 
     """Function that takes in two columns in self.df and returns True/False in the case of a crossover"""
 
-    def crossover(self, date, column_one, column_two):
+    def crossover(
+        self, date: dt, column_one: pd.DataFrame, column_two: pd.DataFrame
+    ) -> bool:
         # Check for the position of the date in self.df
         position = list(self.data.index.date).index(date)
 
@@ -46,7 +49,7 @@ class StrategyBrain:
                 return True
 
     # Loop through each day of trading, applying the next function each day
-    def day_by_day(self, func):
+    def day_by_day(self, func) -> None:
         every_day_dict = self.data.reset_index().to_dict(orient="records")
         for day_data in every_day_dict:
             func(day_data)
@@ -54,24 +57,24 @@ class StrategyBrain:
 
     # Check if the last trade has been closed, if it hasn't a final sell signal is appended
     # TODO (fix issue where trade can be closed on a weekend)
-    def check_for_stub_period(self):
+    def check_for_stub_period(self) -> None:
         if self.entry_exit_dates[-1][0] == "Buy":
             self.entry_exit_dates.append(
                 ("Sell", pd.Timestamp(self.backtest_end_date, tz=None).date())
             )
 
     # Appends a buy signal to entry_exit_dates with a tuple ('Sell',date)
-    def buy(self, date):
+    def buy(self, date: dt) -> None:
         self.entry_exit_dates.append(("Buy", date.date()))
         self.last_entry_price = self.data.loc[date, "Adj Close"]
         self.in_position = True
 
     # Appends a sell signal to exit entry dates with a tuple ('Sell',date)
-    def sell(self, date):
+    def sell(self, date: dt) -> None:
         self.in_position = False
         self.entry_exit_dates.append(("Sell", date.date()))
 
-    def stop_loss(self, date, limit_percentage):
+    def stop_loss(self, date: dt, limit_percentage: float) -> None:
         if self.in_position:
             current_close = self.data.loc[date, "Adj Close"]
             drawdown = (
@@ -80,15 +83,17 @@ class StrategyBrain:
             if drawdown > limit_percentage:
                 self.sell(date)
 
-    def take_profit(self, date, take_profit_percentage):
+    def take_profit(self, date: dt, take_profit_percentage: float) -> None:
         if self.in_position:
             current_close = self.data.loc[date, "Adj Close"]
-            rise = ((current_close - self.last_entry_price) / self.last_entry_price) * 100
+            rise = (
+                (current_close - self.last_entry_price) / self.last_entry_price
+            ) * 100
             if rise > take_profit_percentage:
                 self.sell(date)
 
     # Creates dataframe with columns for all indecators.
-    def get_indicators(self, MA_period):
+    def get_indicators(self, MA_period: int) -> pd.DataFrame:
         # self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
         self.data["MA"] = self.simple_moving_average(MA_period)
         self.data["MACD"] = self.macd()
@@ -97,7 +102,7 @@ class StrategyBrain:
         return self.data
 
     # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
-    def get_entry_exit_dates(self, indicators_and_signals_df):
+    def get_entry_exit_dates(self, indicators_and_signals_df: pd.DataFrame) -> list:
         entry_exit_dates = []
         signal_list = list(indicators_and_signals_df["Signal"])
         dates_list = list(indicators_and_signals_df.index)
@@ -119,7 +124,7 @@ class StrategyBrain:
 
     # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
     # for Portfolio Constructor Class
-    def construct_trades_list(self, entry_exit_dates, ticker):
+    def construct_trades_list(self, entry_exit_dates, ticker) -> list:
         trades_list = []
         number_of_trades = len(entry_exit_dates)
         # Step = 2 as the list of entry_exit_dates alternates between buy and sell.
@@ -139,7 +144,7 @@ class StrategyBrain:
 
     # def next, buy and sell
 
-    def simple_moving_average(self, period):
+    def simple_moving_average(self, period: int) -> pd.DataFrame:
         """
         Returns the SMA for the given period
 
@@ -147,7 +152,7 @@ class StrategyBrain:
         """
         return self.data.rolling(window=period).mean()["Adj Close"]
 
-    def exponential_moving_average(self, period):
+    def exponential_moving_average(self, period: int) -> pd.DataFrame:
         """
         Returns the EMA (giving more weight to newer data) for the given period
 
@@ -155,7 +160,7 @@ class StrategyBrain:
         """
         return self.data.ewm(span=period).mean()["Adj Close"]
 
-    def macd(self):
+    def macd(self) -> pd.DataFrame:
         """
         Returns the MACD (Moving Average Convergence / Divergence)for periods of 12 and 26
 
@@ -163,15 +168,15 @@ class StrategyBrain:
         """
         return self.exponential_moving_average(12) - self.exponential_moving_average(26)
 
-    def macd_signal_line(self):
+    def macd_signal_line(self) -> pd.DataFrame:
         """Returns the signal line for the MACD which is an EMA of period 9"""
         return self.exponential_moving_average(9)
 
-    def macd_histogram(self):
+    def macd_histogram(self) -> pd.DataFrame:
         """Returns the histogram for MACD"""
         return self.macd() - self.macd_signal_line()
 
-    def bollinger_bands(self, period, numsd):
+    def bollinger_bands(self, period: int, numsd: int) -> pd.DataFrame:
         """
         Returns the average, upper and lower bands for Bollinger Bands
 
@@ -185,23 +190,23 @@ class StrategyBrain:
 
         return df
 
-    def get_max_high_price(self):
+    def get_max_high_price(self) -> float:
         """Returns the max high price"""
         return np.round(self.data["High"].max(), 2)
 
-    def get_min_low_price(self):
+    def get_min_low_price(self) -> float:
         """Returns the min low price"""
         return np.round(self.data["Low"].min(), 2)
 
-    def get_max_close_price(self):
+    def get_max_close_price(self) -> float:
         """Returns the max close price"""
         return np.round(self.data["Adj Close"].max(), 2)
 
-    def get_min_close_price(self):
+    def get_min_close_price(self) -> float:
         """Returns the min close price"""
         return np.round(self.data["Adj Close"].min(), 2)
 
-    def vwap(self):
+    def vwap(self) -> pd.DataFrame:
         """
         Returns Volume Weighted Average Price (VWAP)
 
@@ -217,7 +222,7 @@ class StrategyBrain:
 
         return df["VWAP"]
 
-    def rsi(self, period=14):
+    def rsi(self, period: int = 14) -> pd.DataFrame:
         """
         Returns the Relative Strength Index using EMA with a default period of 14
 
@@ -244,7 +249,7 @@ class StrategyBrain:
 
         return df["RSI"]
 
-    def mfi(self, period=14):
+    def mfi(self, period: int = 14) -> pd.DataFrame:
         """
         Returns the Money Flow Index with a default period of 14
 
@@ -280,19 +285,16 @@ class StrategyBrain:
         df["MFI"] = 100 - (100 / (1 + df["Money Ratio"]))
         return df["MFI"]
 
-    def up_days(self):
+    def up_days(self) -> int:
         """
         Returns true if the day has a positive change from the previous day, otherwise false
         """
         change = self.data["Close"].diff()
         return change > 0
 
-    def is_up_day(self, date):
+    def is_up_day(self, date: dt) -> bool:
         """
         Returns if the specified day had a positive change
         """
         change = self.data["Close"].diff()
         return change.loc[str(date)] > 0
-
-
-
