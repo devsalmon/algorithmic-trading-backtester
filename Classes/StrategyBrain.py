@@ -298,3 +298,11 @@ class StrategyBrain:
         """
         change = self.data["Close"].diff()
         return change.loc[str(date)] > 0
+
+    def obv(self) -> pd.DataFrame:
+        """
+        Returns the On Balance Volume for a given ticker
+
+        [https://www.investopedia.com/terms/o/onbalancevolume.asp]
+        """
+        return (np.sign(self.data['close'].diff()) * self.data['volume']).fillna(0).cumsum()
