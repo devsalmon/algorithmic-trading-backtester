@@ -19,19 +19,19 @@ class StrategyBrain:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
-    """Function that takes in two columns in self.df and returns True/False in the case of a crossover"""
+    def crossover(self, date: dt, column_one: pd.DataFrame, column_two: pd.DataFrame) -> bool:
+        """
+        Returns True/False if two columns in self.df have a crossover
+        """
 
-    def crossover(
-        self, date: dt, column_one: pd.DataFrame, column_two: pd.DataFrame
-    ) -> bool:
         # Check for the position of the date in self.df
         position = list(self.data.index.date).index(date)
 
-        """Return a False on the first row"""
+        # Return a False on the first row
         if position == 0:
             return False
         elif position != 0:
-            """Get the price of first and second column on the given date and the day before"""
+            # Get the price of first and second column on the given date and the day before
             first_column_today, first_column_yeserday = (
                 self.data[column_one].iloc[position],
                 self.data[column_one].iloc[position - 1],
@@ -41,36 +41,47 @@ class StrategyBrain:
                 self.data[column_two].iloc[position - 1],
             )
 
-            """Check for crossover and return True in the case of a crossover"""
+            # Check for crossover and return True in the case of a crossover
             if (
                 first_column_today > second_column_today
                 and first_column_yeserday < second_column_yesterday
             ):
                 return True
 
-    # Loop through each day of trading, applying the next function each day
-    def day_by_day(self, func) -> None:
+    def day_by_day(self, func: function) -> None:
+        """
+        Loops through each day of trading, applying func to the data
+        """
         every_day_dict = self.data.reset_index().to_dict(orient="records")
         for day_data in every_day_dict:
             func(day_data)
         self.check_for_stub_period()
 
-    # Check if the last trade has been closed, if it hasn't a final sell signal is appended
-    # TODO (fix issue where trade can be closed on a weekend)
     def check_for_stub_period(self) -> None:
+        """
+        Checks if the last trade has been closed. If it hasn't, a final sell signal
+        is appended
+        """
+        # TODO (fix issue where trade can be closed on a weekend)
         if self.entry_exit_dates[-1][0] == "Buy":
             self.entry_exit_dates.append(
                 ("Sell", pd.Timestamp(self.backtest_end_date, tz=None).date())
             )
 
-    # Appends a buy signal to entry_exit_dates with a tuple ('Sell',date)
     def buy(self, date: dt) -> None:
+        """
+        Appends a buy signal to entry_exit_dates with a tuple ('Buy',date)
+        """
+
         self.entry_exit_dates.append(("Buy", date.date()))
         self.last_entry_price = self.data.loc[date, "Adj Close"]
         self.in_position = True
 
-    # Appends a sell signal to exit entry dates with a tuple ('Sell',date)
     def sell(self, date: dt) -> None:
+        """
+        Appends a sell signal to exit entry dates with a tuple ('Sell',date)
+        """
+
         self.in_position = False
         self.entry_exit_dates.append(("Sell", date.date()))
 
@@ -92,8 +103,11 @@ class StrategyBrain:
             if rise > take_profit_percentage:
                 self.sell(date)
 
-    # Creates dataframe with columns for all indecators.
     def get_indicators(self, MA_period: int) -> pd.DataFrame:
+        """
+        Returns a DataFrame with columns for all indicators
+        """
+
         # self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
         self.data["MA"] = self.simple_moving_average(MA_period)
         self.data["MACD"] = self.macd()
@@ -101,8 +115,11 @@ class StrategyBrain:
         # TODO all indicators here...
         return self.data
 
-    # Gets list of tuples of alternating buy and sell signals, e.g [(Buy, date), (Sell, date), (Buy...)]
     def get_entry_exit_dates(self, indicators_and_signals_df: pd.DataFrame) -> list:
+        """
+        Returns a list of tuples of alternating buy and sell signals,  e.g [(Buy, date), (Sell, date), (Buy...)]
+        """
+
         entry_exit_dates = []
         signal_list = list(indicators_and_signals_df["Signal"])
         dates_list = list(indicators_and_signals_df.index)
@@ -122,9 +139,10 @@ class StrategyBrain:
             )
         return entry_exit_dates
 
-    # Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
-    # for Portfolio Constructor Class
     def construct_trades_list(self, entry_exit_dates, ticker) -> list:
+        """
+        Creates 2d list of trades in format [UTID, Ticker, Quantity, Leverage, Buy Date, Sell Date]
+        """
         trades_list = []
         number_of_trades = len(entry_exit_dates)
         # Step = 2 as the list of entry_exit_dates alternates between buy and sell.
@@ -191,15 +209,21 @@ class StrategyBrain:
         return df
 
     def get_max_high_price(self) -> float:
-        """Returns the max high price"""
+        """
+        Returns the max high price
+        """
         return np.round(self.data["High"].max(), 2)
 
     def get_min_low_price(self) -> float:
-        """Returns the min low price"""
+        """
+        Returns the min low price
+        """
         return np.round(self.data["Low"].min(), 2)
 
     def get_max_close_price(self) -> float:
-        """Returns the max close price"""
+        """
+        Returns the max close price
+        """
         return np.round(self.data["Adj Close"].max(), 2)
 
     def get_min_close_price(self) -> float:
@@ -285,9 +309,10 @@ class StrategyBrain:
         df["MFI"] = 100 - (100 / (1 + df["Money Ratio"]))
         return df["MFI"]
 
-    def up_days(self) -> int:
+    def up_days(self) -> pd.DataFrame:
         """
-        Returns true if the day has a positive change from the previous day, otherwise false
+        Returns a DataFrame with boolean values, where True is a positive change from the previous day, 
+        False is a negative change from previous day
         """
         change = self.data["Close"].diff()
         return change > 0
@@ -299,17 +324,35 @@ class StrategyBrain:
         change = self.data["Close"].diff()
         return change.loc[str(date)] > 0
 
-    def get_indicator_df(self):
+    def get_indicator_df(self) -> pd.DataFrame:
         return self.data
 
     def obv(self) -> pd.DataFrame:
         """
-        Returns the On Balance Volume for a given ticker
+        Returns the On Balance Volume (OBV)
 
         [https://www.investopedia.com/terms/o/onbalancevolume.asp]
         """
         return (
-            (np.sign(self.data["close"].diff()) * self.data["volume"])
+            (np.sign(self.data["Close"].diff()) * self.data["Volume"])
             .fillna(0)
             .cumsum()
         )
+    
+    def atr(self) -> pd.DataFrame:
+        """
+        Returns a DataFrame of the Average True Range (ATR)
+
+        [https://en.wikipedia.org/wiki/Average_true_range]
+        """
+        # TODO - remove the NaN rows
+        high_low = self.data['High'] - self.data['Low']
+        high_close = np.abs(self.data['High'] - self.data['Close'].shift())
+        low_close = np.abs(self.data['Low'] - self.data['Close'].shift())
+        ranges = pd.concat([high_low, high_close, low_close], axis=1)
+        true_range = np.max(ranges, axis=1)
+        atr = true_range.rolling(14).sum()/14
+        return atr
+
+s = StrategyBrain("AAPL", dt.date(2020, 1, 1), dt.date(2020, 2, 2))
+print(s.atr())
