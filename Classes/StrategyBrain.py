@@ -365,7 +365,8 @@ class StrategyBrain:
             start_date = str(self.backtest_start_date)
         else:
             start_date = str(start_date)
-        if end_date   == None: 
+            
+        if end_date == None: 
             end_date = str(self.backtest_end_date)
         else:
             end_date = str(end_date)
@@ -379,6 +380,21 @@ class StrategyBrain:
         level786 = max_price - (0.786 * diff)
 
         return [level236, level382, level618, level786]
+    
+    def stochastic_oscillator(self, d_sma_period: int = 3) -> pd.DataFrame:
+        """
+        Returns the stochastic oscillator where
 
-s = StrategyBrain("AAPL", dt.date(2020, 1, 1), dt.date(2020, 2, 2))
-print(s.fibonacci_retracement_levels())
+        %K = (Last Close - Lowest Close) / (Highest High - Lowest Low)
+        %D = Simple Moving Average of %K
+
+        [https://www.investopedia.com/terms/s/stochasticoscillator.asp]
+        """
+        # TODO - Get rid of NaN rows?
+        df = pd.DataFrame()
+        df['14-high'] = self.data['High'].rolling(14).max()
+        df['14-low'] = self.data['Low'].rolling(14).min()
+        df['%K'] = (self.data['Close'] - df['14-low'])*100/(df['14-high'] - df['14-low'])
+        df['%D'] = df['%K'].rolling(d_sma_period).mean()
+
+        return df
