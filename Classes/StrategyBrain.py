@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
-import typing
+from typing import Callable
 
 
 class StrategyBrain:
@@ -48,7 +48,7 @@ class StrategyBrain:
             ):
                 return True
 
-    def day_by_day(self, func: function) -> None:
+    def day_by_day(self, func: Callable[[dict], None]) -> None:
         """
         Loops through each day of trading, applying func to the data
         """
@@ -208,27 +208,29 @@ class StrategyBrain:
 
         return df
 
-    def get_max_high_price(self) -> float:
+    def get_max_high_price(self, data: pd.DataFrame) -> float:
         """
-        Returns the max high price
+        Returns the maximum high price
         """
-        return np.round(self.data["High"].max(), 2)
+        return np.round(data["High"].max(), 2)
 
-    def get_min_low_price(self) -> float:
+    def get_min_low_price(self, data: pd.DataFrame) -> float:
         """
-        Returns the min low price
+        Returns the minimim low price
         """
-        return np.round(self.data["Low"].min(), 2)
+        return np.round(data["Low"].min(), 2)
 
-    def get_max_close_price(self) -> float:
+    def get_max_close_price(self, data: pd.DataFrame) -> float:
         """
-        Returns the max close price
+        Returns the maximim close price
         """
-        return np.round(self.data["Adj Close"].max(), 2)
+        return np.round(data["Adj Close"].max(), 2)
 
-    def get_min_close_price(self) -> float:
-        """Returns the min close price"""
-        return np.round(self.data["Adj Close"].min(), 2)
+    def get_min_close_price(self, data: pd.DataFrame) -> float:
+        """
+        Returns the minimum close price
+        """
+        return np.round(data["Adj Close"].min(), 2)
 
     def vwap(self) -> pd.DataFrame:
         """
@@ -353,6 +355,30 @@ class StrategyBrain:
         true_range = np.max(ranges, axis=1)
         atr = true_range.rolling(14).sum()/14
         return atr
+    
+    def fibonacci_retracement_levels(self, start_date: dt = None, end_date: dt = None) -> list:
+        """
+        Returns a list of the 23.6%, 38.2%, 61.8% and 78.6% Fibonacci levels
+        """
+        
+        if start_date == None: 
+            start_date = str(self.backtest_start_date)
+        else:
+            start_date = str(start_date)
+        if end_date   == None: 
+            end_date = str(self.backtest_end_date)
+        else:
+            end_date = str(end_date)
+        
+        self.data_range = self.data.copy().loc[start_date:end_date]
+        max_price, min_price = self.get_max_close_price(self.data_range), self.get_min_close_price(self.data_range)
+        diff = max_price - min_price
+        level236 = max_price - (0.236 * diff)
+        level382 = max_price - (0.382 * diff)
+        level618 = max_price - (0.618 * diff)
+        level786 = max_price - (0.786 * diff)
+
+        return [level236, level382, level618, level786]
 
 s = StrategyBrain("AAPL", dt.date(2020, 1, 1), dt.date(2020, 2, 2))
-print(s.atr())
+print(s.fibonacci_retracement_levels())
