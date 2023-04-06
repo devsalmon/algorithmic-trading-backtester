@@ -392,9 +392,9 @@ class StrategyBrain:
         """
         # TODO - Get rid of NaN rows?
         df = pd.DataFrame()
-        df['14-high'] = self.data['High'].rolling(14).max()
-        df['14-low'] = self.data['Low'].rolling(14).min()
-        df['%K'] = (self.data['Close'] - df['14-low'])*100/(df['14-high'] - df['14-low'])
+        fourteen_high = self.data['High'].rolling(14).max()
+        fourteen_low = self.data['Low'].rolling(14).min()
+        df['%K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
         df['%D'] = df['%K'].rolling(d_sma_period).mean()
 
         return df
