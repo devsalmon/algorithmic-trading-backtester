@@ -68,7 +68,8 @@ class TradeAnalysis:
     def get_return_list(self) -> list:
         return_list = []
         for trade in self.trades:
-            df = self.get_data(trade[1], trade[4], trade[5])
+            utid, ticker, qty, leverage, buy_date, sell_date = trade
+            df = self.get_data(ticker,buy_date,sell_date) 
             trade_return = 100 * ((df.iloc[-1] / df.iloc[0]) - 1)
             return_list.append(trade_return)
         return return_list

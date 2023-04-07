@@ -25,7 +25,8 @@ class GraphicalConstructor:
 
     def get_trade_performance(self):
         for trade in self.trade_list:
-            df = self.get_data(trade[1],trade[4],trade[5])            
+            utid, ticker, qty, leverage, buy_date, sell_date = trade
+            df = self.get_data(ticker,buy_date,sell_date)            
             trade_performance = 100 * ((df.iloc[-1] / df.iloc[0]) - 1)
             trade.append(trade_performance)
 
