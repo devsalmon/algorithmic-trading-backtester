@@ -11,6 +11,7 @@ class GraphicalConstructor:
         self.trade_list, self.portfolio_df, self.indicator_df, self.main_columns = trade_list, portfolio_df, indicator_df, main_columns
 
         '''Get performance of each trade, add it to each list in self.trade_list'''
+        self.main_df = self.construct_main_df()
         self.get_trade_performance()
 
         '''Construct Graphs'''
@@ -24,9 +25,22 @@ class GraphicalConstructor:
 
     def get_trade_performance(self):
         for trade in self.trade_list:
-            df = yf.download(trade[1],trade[4],trade[5],progress=False)
-            trade_performance = np.round(100*(df['Adj Close'].iloc[-1]-df['Adj Close'].iloc[0])/df['Adj Close'].iloc[0],2)
+            utid, ticker, qty, leverage, buy_date, sell_date = trade
+            df = self.get_data(ticker,buy_date,sell_date)            
+            trade_performance = 100 * ((df.iloc[-1] / df.iloc[0]) - 1)
             trade.append(trade_performance)
+
+    def construct_main_df(self) -> pd.DataFrame:
+        tickers = list(set([trade[1] for trade in self.trade_list]))
+        main_df = pd.DataFrame()
+        for ticker in tickers:
+            main_df[ticker] = yf.download(
+                ticker, dt.date(1900, 1, 1), dt.date.today(), progress=False
+            )["Adj Close"]
+        return main_df 
+
+    def get_data(self, ticker: str, start_date: dt, end_date: dt) -> pd.DataFrame:
+        return self.main_df[ticker].loc[start_date:end_date]
 
     def construct_figure(self):
         self.fig = make_subplots(
