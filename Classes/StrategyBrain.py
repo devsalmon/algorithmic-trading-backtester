@@ -19,7 +19,7 @@ class StrategyBrain:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
-    def crossover(self, date: dt, column_one: pd.DataFrame, column_two: pd.DataFrame) -> bool:
+    def crossover(self, date: dt, column_one_name: str, column_two_name: str) -> bool:
         """
         Returns True/False if two columns in self.df have a crossover
         """
@@ -33,12 +33,12 @@ class StrategyBrain:
         elif position != 0:
             # Get the price of first and second column on the given date and the day before
             first_column_today, first_column_yeserday = (
-                self.data[column_one].iloc[position],
-                self.data[column_one].iloc[position - 1],
+                self.data[column_one_name].iloc[position],
+                self.data[column_one_name].iloc[position - 1],
             )
             second_column_today, second_column_yesterday = (
-                self.data[column_two].iloc[position],
-                self.data[column_two].iloc[position - 1],
+                self.data[column_two_name].iloc[position],
+                self.data[column_two_name].iloc[position - 1],
             )
 
             # Check for crossover and return True in the case of a crossover
