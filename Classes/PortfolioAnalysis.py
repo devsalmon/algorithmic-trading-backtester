@@ -5,16 +5,6 @@ import scipy.stats as st
 import numpy as np
 import typing
 
-# import plotly.graph_objects as go
-# 1465, 2019-02-30
-
-
-# Create fake portfolio (df)
-# df = yf.download("SPY", dt.date(2010, 1, 1), dt.date.today(), progress=False)
-# df["Portfolio Value"] = round(df["Adj Close"] / df["Adj Close"].iloc[0] * 10000, 2)
-# df.drop(["Open", "High", "Low", "Close", "Adj Close", "Volume"], axis=1, inplace=True)
-
-
 class PortfolioAnalysis:
     def __init__(self, portfolio: pd.DataFrame):
         self.timeseries = portfolio
@@ -24,33 +14,57 @@ class PortfolioAnalysis:
         self.drawdown_list = self.get_drawdown_list()
 
     def get_time_period(self) -> int:
+        """
+        Finds the length of time between the start and end period in days
+        """
         return (self.end_date - self.start_date).days
 
     def get_inital_capital(self) -> float:
+        """
+        Finds the amount of capital the portfolio has at the start date
+        """
         inital_capital = self.timeseries["Portfolio Value"].iloc[0]
         return round(inital_capital, 2)
 
     def get_ending_capital(self) -> float:
+        """
+        Finds the amount of capital the portfolio has at the end date
+        """
         ending_capital = self.timeseries["Portfolio Value"].iloc[-1]
         return round(ending_capital, 2)
 
     def get_peak_equity(self) -> float:
+        """
+        Find the maximum value of the portfolio over the time period
+        """
         return round(max(self.timeseries["Portfolio Value"]), 1)
 
     def get_trough_equity(self) -> float:
+        """
+        Finds the minimum value of the portfolio over the time period
+        """
         return round(min(self.timeseries["Portfolio Value"]), 1)
 
     def get_net_profit(self) -> float:
+        """
+        Finds the total profits of the portfolio over the time period
+        """
         net_profit = self.get_ending_capital() - self.get_inital_capital()
         return net_profit
 
     def get_net_profit_percentage(self) -> float:
+        """
+        Finds the total profits of the portfolio, in a percentage, over the time period
+        """
         get_net_profit_percentage = round(
             100 * (self.get_net_profit() / self.get_inital_capital()), 2
         )
         return get_net_profit_percentage
 
     def get_annual_return(self) -> float:
+        """
+        Finds the annual rate of return of the portfolio in percentage
+        """
         time_period_days = (self.end_date - self.start_date).days
         one_plus_performance = 1 + (self.get_net_profit_percentage() * 0.01)
         annualised_return = round(
@@ -59,18 +73,31 @@ class PortfolioAnalysis:
         return annualised_return
 
     def get_annual_risk(self) -> float:
+        """
+        Finds the annual standard deviation of the portfolo as a percentage
+        """
         df = self.timeseries
         df["PercentageChange"] = 100 * df["Portfolio Value"].pct_change()
         annual_risk = round(df["PercentageChange"].std() * (252**0.5), 2)
         return annual_risk
 
     def get_sharpe_ratio(self) -> float:
+        """
+        Finds the sharpe ratio of the portfolio, a method of finding risk ajusted returns
+
+        [https://en.wikipedia.org/wiki/Sharpe_ratio]
+        """
         sharpe_ratio = round(
             (self.get_annual_return() - self.risk_free_rate) / self.get_annual_risk(), 2
         )
         return sharpe_ratio
 
     def get_annual_downside_deviation(self) -> float:
+        """
+        Finds the annual standard deviation of the negative returns of the portfolio as a percentage 
+
+        [https://en.wikipedia.org/wiki/Downside_risk]
+        """
         df = self.timeseries
         df["PercentageChange"] = df["Portfolio Value"].pct_change()
         df["NegativePercentageChange"] = df["PercentageChange"].where(
@@ -83,6 +110,11 @@ class PortfolioAnalysis:
         return round(annualised_downside_deviation, 2)
 
     def get_sortino_ratio(self) -> float:
+        """
+        Finds the sortino ratio of the portfolio, a method of finding risk ajusted returns
+
+        [https://en.wikipedia.org/wiki/Sortino_ratio]
+        """
         sortino_ratio = round(
             (self.get_annual_return() - self.risk_free_rate)
             / self.get_annual_downside_deviation(),
@@ -91,6 +123,10 @@ class PortfolioAnalysis:
         return sortino_ratio
 
     def get_drawdown_list(self) -> int:
+        """
+        Finds a list of drawdowns of the portfolio and returns a list of lists
+        [[start_date, end_date, length, maximum drawdown], [start_date...],[...]]
+        """
         # Create Drawdown Columns
         df = self.timeseries
         df["Max"] = df["Portfolio Value"].rolling(window=99999, min_periods=0).max()
@@ -130,10 +166,16 @@ class PortfolioAnalysis:
         return drawdown_list
 
     def get_maximum_drawdown(self) -> float:
+        """
+        Finds the size in percentage of the largest drawdown
+        """
         maximum_drawdown = np.max([element[3] for element in self.drawdown_list])
         return maximum_drawdown
 
     def get_length_of_maximum_drawdown(self) -> int:
+        """
+        Finds the length in days of the largest drawdown
+        """
         count = [element[3] for element in self.drawdown_list].index(
             self.get_maximum_drawdown()
         )
@@ -143,10 +185,16 @@ class PortfolioAnalysis:
         return maximum_drawdown_period
 
     def get_longest_drawdown_period(self) -> int:
+        """
+        Finds the length of the longest drawdown period in days
+        """
         longest_drawdown_period = np.max([element[2] for element in self.drawdown_list])
         return longest_drawdown_period
 
     def get_longest_drawdown(self) -> float:
+        """
+        Finds the size of the longest drawdown in percentage
+        """
         count = [element[2] for element in self.drawdown_list].index(
             self.get_longest_drawdown_period()
         )
@@ -154,18 +202,29 @@ class PortfolioAnalysis:
         return longest_drawdown
 
     def get_average_drawdown(self) -> float:
+        """
+        Finds the average size of the maximum drawdown for all trades, in percentage
+        """
         average_drawdown = np.round(
             np.mean([element[3] for element in self.drawdown_list]), 2
         )
         return average_drawdown
 
     def get_average_drawdown_period(self) -> int:
+        """
+        Finds the average length of drawdowns in all trades, in days
+        """
         average_drawdown_period = np.round(
             np.mean([element[2] for element in self.drawdown_list]), 0
         )
         return int(average_drawdown_period)
 
     def get_calmar_ratio(self) -> float:
+        """
+        Finds the Calmar ratio, a method of finding risk ajusted returns 
+
+        [https://en.wikipedia.org/wiki/Calmar_ratio]
+        """
         calmar_ratio = round(
             (self.get_annual_return() - self.risk_free_rate)
             / self.get_maximum_drawdown(),
@@ -174,12 +233,21 @@ class PortfolioAnalysis:
         return calmar_ratio
 
     def get_var95(self) -> float:
+        """
+        Finds the value at risk for the portfolio for 95%
+        This is the minimum value our portfolio should expect to lose in the worst 5% of years
+
+        [https://en.wikipedia.org/wiki/Value_at_risk]
+        """
         df = self.timeseries
         Z = st.norm.ppf(0.95)
         var95 = round(-1 * Z * self.get_annual_risk() + self.get_annual_return(), 2)
         return var95
 
     def display_row(self, column_one: any, column_two: any) -> None:
+        """
+        Method used to format and print inputs
+        """
         column_one, column_two = str(column_one), str(column_two)
         while len(column_one) != 30:
             column_one += " "
@@ -192,6 +260,9 @@ class PortfolioAnalysis:
         print(self.timeseries)
 
     def print_statistics(self) -> None:
+        """
+        Method that prints out all of the key statistics for the portfolio
+        """
         self.display_row("", "Portfolio")
         print("-----------------------------------------")
         self.display_row("Overview", "")
@@ -253,9 +324,3 @@ class PortfolioAnalysis:
         fig.update_xaxes(linecolor="black")
         fig.update_yaxes(linecolor="black")
         fig.show()
-
-
-# analysis = PortfolioAnalysis(df)
-# analysis.show_timeseries()
-# analysis.print_statistics()
-# analysis.show_equity_graph()
