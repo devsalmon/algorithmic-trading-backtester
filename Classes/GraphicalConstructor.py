@@ -83,40 +83,23 @@ class GraphicalConstructor:
         returns = [trade[6] for trade in self.trade_list]
         dates = [trade[5] for trade in self.trade_list]
         for count, returns in enumerate(returns):
-            if returns >= 0:
-                self.fig.add_trace(
-                    go.Scatter(
-                        x=[dates[count]],
-                        y=[returns],
-                        mode='markers',
-                        name='Trade Returns',
-                        marker=dict(
-                            size=5*abs(returns)**(0.3)+2,
-                            symbol='star',
-                            color='green'
-                            ),
-                        showlegend=False
+            marker_color_function = lambda returns: "green" if returns>=0 else "red"
+            self.fig.add_trace(
+                go.Scatter(
+                    x=[dates[count]],
+                    y=[returns],
+                    mode='markers',
+                    name='Trade Returns',
+                    marker=dict(
+                        size=5*abs(returns)**(0.3)+2,
+                        symbol='star',
+                        color=marker_color_function(returns)
                         ),
-                    row=2,
-                    col=1
-                    )
-            elif returns < 0:
-                self.fig.add_trace(
-                    go.Scatter(
-                        x=[dates[count]],
-                        y=[returns],
-                        mode='markers',
-                        name='Trade Returns',
-                        marker=dict(
-                            size=5*abs(returns)**(0.3)+2,
-                            symbol='star',
-                            color='red'
-                            ),
-                        showlegend=False
-                        ),
-                    row=2,
-                    col=1
-                    )
+                    showlegend=False
+                    ),
+                row=2,
+                col=1
+                )
             self.fig.update_yaxes(
                 ticksuffix="%",
                 row=2,
