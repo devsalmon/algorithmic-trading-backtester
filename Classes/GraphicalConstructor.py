@@ -110,7 +110,7 @@ class GraphicalConstructor:
                         marker=dict(
                             size=5*abs(returns)**(0.3)+2,
                             symbol='star',
-                            color='green'
+                            color='red'
                             ),
                         showlegend=False
                         ),
