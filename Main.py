@@ -30,3 +30,4 @@ graph = GraphicalConstructor(trades_list,strategy_portfolio,indicator_df,['Adj C
 
 
 
+

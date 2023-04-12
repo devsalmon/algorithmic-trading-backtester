@@ -1,7 +1,8 @@
 {
   "editor.defaultFormatter": null,
   "python.analysis.extraPaths": [
-    "./test"
+    "./test",
+    "./Classes"
   ],
   "python.formatting.provider": "black",
   "editor.formatOnSave": true,

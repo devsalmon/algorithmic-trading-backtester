@@ -19,7 +19,7 @@ class StrategyBrain:
         # Columns - Open, High, Low, Close, Adj Close, Volume
         self.data = yf.download(ticker, start_date, end_date, progress=False)
 
-    def crossover(self, date: dt, column_one: pd.DataFrame, column_two: pd.DataFrame) -> bool:
+    def crossover(self, date: dt, column_one_name: str, column_two_name: str) -> bool:
         """
         Returns True/False if two columns in self.df have a crossover
         """
@@ -33,12 +33,12 @@ class StrategyBrain:
         elif position != 0:
             # Get the price of first and second column on the given date and the day before
             first_column_today, first_column_yeserday = (
-                self.data[column_one].iloc[position],
-                self.data[column_one].iloc[position - 1],
+                self.data[column_one_name].iloc[position],
+                self.data[column_one_name].iloc[position - 1],
             )
             second_column_today, second_column_yesterday = (
-                self.data[column_two].iloc[position],
-                self.data[column_two].iloc[position - 1],
+                self.data[column_two_name].iloc[position],
+                self.data[column_two_name].iloc[position - 1],
             )
 
             # Check for crossover and return True in the case of a crossover
@@ -164,8 +164,6 @@ class StrategyBrain:
             )
         return trades_list
 
-    # def next, buy and sell
-
     def simple_moving_average(self, period: int) -> pd.DataFrame:
         """
         Returns the SMA for the given period
@@ -197,6 +195,46 @@ class StrategyBrain:
     def macd_histogram(self) -> pd.DataFrame:
         """Returns the histogram for MACD"""
         return self.macd() - self.macd_signal_line()
+
+    def adx(self, period=14) -> pd.DataFrame:
+        """
+        Returns the ADX (Average Direction Movement Index)
+
+        [https://en.wikipedia.org/wiki/Average_directional_movement_index]
+        """
+        # Calculate UpMove and DownMove
+        self.data["UpMove"] = self.data["High"] - self.data["High"].shift(1)
+        self.data["DownMove"] = self.data["Low"].shift(1) - self.data["Low"]
+
+        # Calculate +DM and -DM
+        self.data["+DM"] = 0
+        self.data["-DM"] = 0
+        self.data.loc[
+            (self.data["UpMove"] > self.data["DownMove"]) & (self.data["UpMove"] > 0),
+            "+DM",
+        ] = self.data["UpMove"]
+        self.data.loc[
+            (self.data["DownMove"] > self.data["UpMove"]) & (self.data["DownMove"] > 0),
+            "-DM",
+        ] = self.data["DownMove"]
+
+        # Calculate +DI and -DI
+        self.data["+DI"] = (
+            100 * self.data["+DM"].rolling(window=period).mean() / self.atr()
+        )
+        self.data["-DI"] = (
+            100 * self.data["-DM"].rolling(window=period).mean() / self.atr()
+        )
+
+        # Calculate the Directional Movement Index (DX)
+        self.data["DX"] = abs(self.data["+DI"] - self.data["-DI"]) / (
+            self.data["+DI"] + self.data["-DI"]
+        )
+
+        # Calculate the ADX
+        self.data["ADX"] = 100 * self.data["DX"].rolling(window=period).mean()
+
+        return self.data["ADX"]
 
     def bollinger_bands(self, period: int, numsd: int) -> pd.DataFrame:
         """
@@ -317,7 +355,7 @@ class StrategyBrain:
 
     def up_days(self) -> pd.DataFrame:
         """
-        Returns a DataFrame with boolean values, where True is a positive change from the previous day, 
+        Returns a DataFrame with boolean values, where True is a positive change from the previous day,
         False is a negative change from previous day
         """
         change = self.data["Close"].diff()
@@ -344,7 +382,7 @@ class StrategyBrain:
             .fillna(0)
             .cumsum()
         )
-    
+
     def atr(self) -> pd.DataFrame:
         """
         Returns a DataFrame of the Average True Range (ATR)
@@ -352,31 +390,35 @@ class StrategyBrain:
         [https://en.wikipedia.org/wiki/Average_true_range]
         """
         # TODO - remove the NaN rows
-        high_low = self.data['High'] - self.data['Low']
-        high_close = np.abs(self.data['High'] - self.data['Close'].shift())
-        low_close = np.abs(self.data['Low'] - self.data['Close'].shift())
+        high_low = self.data["High"] - self.data["Low"]
+        high_close = np.abs(self.data["High"] - self.data["Close"].shift())
+        low_close = np.abs(self.data["Low"] - self.data["Close"].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
         atr = true_range.rolling(14, min_periods=14).sum()/14
         return atr
-    
-    def fibonacci_retracement_levels(self, start_date: dt = None, end_date: dt = None) -> list:
+
+    def fibonacci_retracement_levels(
+        self, start_date: dt = None, end_date: dt = None
+    ) -> list:
         """
         Returns a list of the 23.6%, 38.2%, 61.8% and 78.6% Fibonacci levels
         """
-        
-        if start_date == None: 
+
+        if start_date == None:
             start_date = str(self.backtest_start_date)
         else:
             start_date = str(start_date)
-            
-        if end_date == None: 
+
+        if end_date == None:
             end_date = str(self.backtest_end_date)
         else:
             end_date = str(end_date)
-        
+
         self.data_range = self.data.copy().loc[start_date:end_date]
-        max_price, min_price = self.get_max_close_price(self.data_range), self.get_min_close_price(self.data_range)
+        max_price, min_price = self.get_max_close_price(
+            self.data_range
+        ), self.get_min_close_price(self.data_range)
         diff = max_price - min_price
         level236 = max_price - (0.236 * diff)
         level382 = max_price - (0.382 * diff)
@@ -384,7 +426,7 @@ class StrategyBrain:
         level786 = max_price - (0.786 * diff)
 
         return [level236, level382, level618, level786]
-    
+
     def stochastic_oscillator(self, d_sma_period: int = 3) -> pd.DataFrame:
         """
         Returns the stochastic oscillator where

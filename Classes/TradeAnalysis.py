@@ -31,6 +31,28 @@ class TradeAnalysis:
     def get_data(self, ticker: str, start_date: dt, end_date: dt) -> pd.DataFrame:
         return self.main_df[ticker].loc[start_date:end_date]
 
+    def get_longest_consecutive_wins(self) -> int:
+        max_length, current_length = 0, 0
+        for returns in self.return_list:
+            if returns >= 0:
+                current_length += 1
+                if current_length > max_length:
+                    max_length = current_length
+            else:
+                current_length = 0
+        return max_length
+
+    def get_longest_consecutive_losses(self) -> int:
+        max_length, current_length = 0, 0
+        for returns in self.return_list:
+            if returns < 0:
+                current_length += 1
+                if current_length > max_length:
+                    max_length = current_length
+            else:
+                current_length = 0
+        return max_length
+
     def get_frequency_of_all_trades(self) -> int:
         return len(self.trades)
 
@@ -68,7 +90,8 @@ class TradeAnalysis:
     def get_return_list(self) -> list:
         return_list = []
         for trade in self.trades:
-            df = self.get_data(trade[1], trade[4], trade[5])
+            utid, ticker, qty, leverage, buy_date, sell_date = trade
+            df = self.get_data(ticker,buy_date,sell_date) 
             trade_return = 100 * ((df.iloc[-1] / df.iloc[0]) - 1)
             return_list.append(trade_return)
         return return_list
@@ -133,6 +156,7 @@ class TradeAnalysis:
         self.format_column("Average Win Return", f"{self.get_average_win_returns()} %")
         self.format_column("Best Trade", f"{self.get_best_winning_trade()} %")
         self.format_column("Worst Trade", f"{self.get_worst_winning_trade()} %")
+        self.format_column('Longest Win Steak',f'{self.get_longest_consecutive_wins()}')
         print("-----------------------------------------")
         self.format_column("Losing Trades", "")
         self.format_column("Frequency", f"{self.get_frequency_of_losing_trades()}")
@@ -141,6 +165,7 @@ class TradeAnalysis:
         self.format_column("Average Loss Return", f"{self.get_average_loss_return()} %")
         self.format_column("Best Trade", f"{self.get_best_losing_trade()} %")
         self.format_column("Worst Trade", f"{self.get_worst_losing_trade()} %")
+        self.format_column('Longest Loss Streak',f'{self.get_longest_consecutive_losses()}')
         print("-----------------------------------------")
 
 
