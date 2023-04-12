@@ -90,7 +90,7 @@ class GraphicalConstructor:
                     mode='markers',
                     name='Trade Returns',
                     showlegend=False,
-                    hovertemplate=f'Trade UTID: {utid}<br>Asset: {ticker}<br>Entry Date: {buy_date}<br>Exit Date: {sell_date}<br>Returns: {round(returns,2)}% <extra></extra>',
+                    hovertemplate=f'<b>Trade UTID: {utid}</b><br>Asset: {ticker}<br>Entry Date: {buy_date}<br>Exit Date: {sell_date}<br>Returns: {round(returns,2)}% <extra></extra>',
                     marker=dict(
                         size=5*abs(returns)**(0.3)+2,
                         symbol='star',
