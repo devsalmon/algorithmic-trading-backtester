@@ -62,10 +62,14 @@ class StrategyBrain:
         Checks if the last trade has been closed. If it hasn't, a final sell signal
         is appended
         """
-        # TODO (fix issue where trade can be closed on a weekend)
+        date = pd.Timestamp(self.backtest_end_date)
+        next_day = date + pd.Timedelta(days=1)
+        while not pd.offsets.BDay().onOffset(next_day):
+            next_day += pd.Timedelta(days=1)
+
         if self.entry_exit_dates[-1][0] == "Buy":
             self.entry_exit_dates.append(
-                ("Sell", pd.Timestamp(self.backtest_end_date, tz=None).date())
+                ("Sell", pd.Timestamp(next_day, tz=None).date())
             )
 
     def buy(self, date: dt) -> None:
@@ -353,7 +357,7 @@ class StrategyBrain:
         low_close = np.abs(self.data['Low'] - self.data['Close'].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        atr = true_range.rolling(14).sum()/14
+        atr = true_range.rolling(14, min_periods=14).sum()/14
         return atr
     
     def fibonacci_retracement_levels(self, start_date: dt = None, end_date: dt = None) -> list:
@@ -392,9 +396,9 @@ class StrategyBrain:
         """
         # TODO - Get rid of NaN rows?
         df = pd.DataFrame()
-        fourteen_high = self.data['High'].rolling(14).max()
-        fourteen_low = self.data['Low'].rolling(14).min()
+        fourteen_high = self.data['High'].rolling(14, min_periods=14).max()
+        fourteen_low = self.data['Low'].rolling(14, min_periods=14).min()
         df['%K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
-        df['%D'] = df['%K'].rolling(d_sma_period).mean()
+        df['%D'] = df['%K'].rolling(d_sma_period, min_periods=14).mean()
 
         return df
