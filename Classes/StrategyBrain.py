@@ -4,6 +4,7 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 from typing import Callable
+import inspect
 
 
 class StrategyBrain:
@@ -116,6 +117,11 @@ class StrategyBrain:
         self.data["MA"] = self.simple_moving_average(MA_period)
         self.data["MACD"] = self.macd()
         self.data["VWAP"] = self.vwap()
+        methods_list = [method_name for method_name in self.__dir__()
+                        if callable(getattr(self, method_name)) and method_name[:2] != '__']
+        
+        print(methods_list)
+
         # TODO all indicators here...
         return self.data
 
@@ -389,13 +395,14 @@ class StrategyBrain:
 
         [https://en.wikipedia.org/wiki/Average_true_range]
         """
-        # TODO - remove the NaN rows
+
         high_low = self.data["High"] - self.data["Low"]
         high_close = np.abs(self.data["High"] - self.data["Close"].shift())
         low_close = np.abs(self.data["Low"] - self.data["Close"].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        atr = true_range.rolling(14, min_periods=14).sum()/14
+        atr = true_range.rolling(14).sum()/14
+        atr = atr.dropna()
         return atr
 
     def fibonacci_retracement_levels(
@@ -436,11 +443,10 @@ class StrategyBrain:
 
         [https://www.investopedia.com/terms/s/stochasticoscillator.asp]
         """
-        # TODO - Get rid of NaN rows?
         df = pd.DataFrame()
-        fourteen_high = self.data['High'].rolling(14, min_periods=14).max()
-        fourteen_low = self.data['Low'].rolling(14, min_periods=14).min()
+        fourteen_high = self.data['High'].rolling(14).max()
+        fourteen_low = self.data['Low'].rolling(14).min()
         df['%K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
-        df['%D'] = df['%K'].rolling(d_sma_period, min_periods=14).mean()
-
+        df['%D'] = df['%K'].rolling(d_sma_period).mean()
+        df.dropna(inplace=True)
         return df
