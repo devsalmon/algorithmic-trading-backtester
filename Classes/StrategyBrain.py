@@ -5,7 +5,11 @@ import datetime as dt
 import matplotlib.pyplot as plt
 from typing import Callable
 import inspect
+import functools
 
+def indicator(func):
+    func.is_indicator = True
+    return func
 
 class StrategyBrain:
     def __init__(self, ticker: str, start_date: dt, end_date: dt):
@@ -108,23 +112,27 @@ class StrategyBrain:
             if rise > take_profit_percentage:
                 self.sell(date)
 
-    def get_indicators(self, MA_period: int) -> pd.DataFrame:
+    def get_indicators(self) -> pd.DataFrame:
         """
         Returns a DataFrame with columns for all indicators
+        (gets all methods with the @indicator decorator)
         """
-
-        # self.data.drop(["Open", "High", "Low", "Close", "Volume"], axis=1, inplace=True)
-        self.data["MA"] = self.simple_moving_average(MA_period)
-        self.data["MACD"] = self.macd()
-        self.data["VWAP"] = self.vwap()
-        methods_list = [method_name for method_name in self.__dir__()
-                        if callable(getattr(self, method_name)) and method_name[:2] != '__']
+        # self.data.drop(["Open", "High", "Low", "Close", "Volume", "Adj Close"], axis=1, inplace=True)
         
-        print(methods_list)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+        df = self.data.copy()
+        indicator_list = []
+        for method_name in self.__dir__():
+            method = getattr(self, method_name)
+            if callable(method) and hasattr(method, 'is_indicator'):
+                indicator_list.append(method_name)
+                # Call the function and add it do the dataframe
+                indicator_df = getattr(self, method_name)()
+                df = pd.concat([indicator_df, df], axis=1)
 
-        # TODO all indicators here...
-        return self.data
-
+        return df
+    
     def get_entry_exit_dates(self, indicators_and_signals_df: pd.DataFrame) -> list:
         """
         Returns a list of tuples of alternating buy and sell signals,  e.g [(Buy, date), (Sell, date), (Buy...)]
@@ -170,29 +178,40 @@ class StrategyBrain:
             )
         return trades_list
 
-    def simple_moving_average(self, period: int) -> pd.DataFrame:
+    @indicator
+    def simple_moving_average(self, period: int = 7) -> pd.DataFrame:
         """
         Returns the SMA for the given period
 
         [https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average]
         """
-        return self.data.rolling(window=period).mean()["Adj Close"]
+        df = pd.DataFrame()
+        df['SMA' + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
+        return df
 
-    def exponential_moving_average(self, period: int) -> pd.DataFrame:
+    @indicator
+    def exponential_moving_average(self, period: int = 7) -> pd.DataFrame:
         """
         Returns the EMA (giving more weight to newer data) for the given period
 
         [https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average]
         """
-        return self.data.ewm(span=period).mean()["Adj Close"]
+        df = pd.DataFrame()
+        df['EMA' + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
+        return df
 
+    @indicator
     def macd(self) -> pd.DataFrame:
         """
         Returns the MACD (Moving Average Convergence / Divergence)for periods of 12 and 26
 
         [https://en.wikipedia.org/wiki/MACD]
         """
-        return self.exponential_moving_average(12) - self.exponential_moving_average(26)
+        df = pd.DataFrame()
+        df['EMA12'] = self.exponential_moving_average(12)
+        df['EMA26'] = self.exponential_moving_average(26)
+        df['MACD'] =  df["EMA12"] - df["EMA26"]
+        return df['MACD']
 
     def macd_signal_line(self) -> pd.DataFrame:
         """Returns the signal line for the MACD which is an EMA of period 9"""
@@ -202,58 +221,60 @@ class StrategyBrain:
         """Returns the histogram for MACD"""
         return self.macd() - self.macd_signal_line()
 
+    @indicator
     def adx(self, period=14) -> pd.DataFrame:
         """
         Returns the ADX (Average Direction Movement Index)
 
         [https://en.wikipedia.org/wiki/Average_directional_movement_index]
         """
+        df = pd.DataFrame()
         # Calculate UpMove and DownMove
-        self.data["UpMove"] = self.data["High"] - self.data["High"].shift(1)
-        self.data["DownMove"] = self.data["Low"].shift(1) - self.data["Low"]
+        df["UpMove"] = self.data["High"] - self.data["High"].shift(1)
+        df["DownMove"] = self.data["Low"].shift(1) - self.data["Low"]
 
         # Calculate +DM and -DM
-        self.data["+DM"] = 0
-        self.data["-DM"] = 0
-        self.data.loc[
-            (self.data["UpMove"] > self.data["DownMove"]) & (self.data["UpMove"] > 0),
+        df["+DM"] = 0
+        df["-DM"] = 0
+        df.loc[
+            (df["UpMove"] > df["DownMove"]) & (df["UpMove"] > 0),
             "+DM",
-        ] = self.data["UpMove"]
-        self.data.loc[
-            (self.data["DownMove"] > self.data["UpMove"]) & (self.data["DownMove"] > 0),
+        ] = df["UpMove"]
+        df.loc[
+            (df["DownMove"] > df["UpMove"]) & (df["DownMove"] > 0),
             "-DM",
-        ] = self.data["DownMove"]
+        ] = df["DownMove"]
 
         # Calculate +DI and -DI
-        self.data["+DI"] = (
-            100 * self.data["+DM"].rolling(window=period).mean() / self.atr()
+        df["+DI"] = (
+            100 * df["+DM"].rolling(window=period).mean() / self.atr()
         )
-        self.data["-DI"] = (
-            100 * self.data["-DM"].rolling(window=period).mean() / self.atr()
+        df["-DI"] = (
+            100 * df["-DM"].rolling(window=period).mean() / self.atr()
         )
 
         # Calculate the Directional Movement Index (DX)
-        self.data["DX"] = abs(self.data["+DI"] - self.data["-DI"]) / (
-            self.data["+DI"] + self.data["-DI"]
+        df["DX"] = abs(df["+DI"] - df["-DI"]) / (
+            df["+DI"] + df["-DI"]
         )
 
         # Calculate the ADX
-        self.data["ADX"] = 100 * self.data["DX"].rolling(window=period).mean()
+        df["ADX"] = 100 * df["DX"].rolling(window=period).mean()
 
-        return self.data["ADX"]
+        return df["ADX"]
 
-    def bollinger_bands(self, period: int, numsd: int) -> pd.DataFrame:
+    @indicator
+    def bollinger_bands(self, period: int = 7, numsd: int = 14) -> pd.DataFrame:
         """
         Returns the average, upper and lower bands for Bollinger Bands
 
         [https://en.wikipedia.org/wiki/Bollinger_Bands]
         """
         df = pd.DataFrame()
-        df["Average"] = self.data.rolling(window=period)["Adj Close"].mean()
+        df["BB Average"] = self.data.rolling(window=period)["Adj Close"].mean()
         standard_deviation = self.data.rolling(window=period)["Adj Close"].std()
-        df["Upper Band"] = df["Average"] + (standard_deviation * numsd)
-        df["Lower Band"] = df["Average"] - (standard_deviation * numsd)
-
+        df["BB Upper Band"] = df["BB Average"] + (standard_deviation * numsd)
+        df["BB Lower Band"] = df["BB Average"] - (standard_deviation * numsd)
         return df
 
     def get_max_high_price(self, data: pd.DataFrame) -> float:
@@ -280,6 +301,7 @@ class StrategyBrain:
         """
         return np.round(data["Adj Close"].min(), 2)
 
+    @indicator
     def vwap(self) -> pd.DataFrame:
         """
         Returns Volume Weighted Average Price (VWAP)
@@ -296,6 +318,7 @@ class StrategyBrain:
 
         return df["VWAP"]
 
+    @indicator
     def rsi(self, period: int = 14) -> pd.DataFrame:
         """
         Returns the Relative Strength Index using EMA with a default period of 14
@@ -323,6 +346,7 @@ class StrategyBrain:
 
         return df["RSI"]
 
+    @indicator
     def mfi(self, period: int = 14) -> pd.DataFrame:
         """
         Returns the Money Flow Index with a default period of 14
@@ -377,33 +401,33 @@ class StrategyBrain:
     def get_indicator_df(self) -> pd.DataFrame:
         return self.data
 
+    @indicator
     def obv(self) -> pd.DataFrame:
         """
         Returns the On Balance Volume (OBV)
 
         [https://www.investopedia.com/terms/o/onbalancevolume.asp]
         """
-        return (
-            (np.sign(self.data["Close"].diff()) * self.data["Volume"])
-            .fillna(0)
-            .cumsum()
-        )
+        df = pd.DataFrame()
+        df['OBV'] = (np.sign(self.data["Close"].diff()) * self.data["Volume"]).fillna(0).cumsum()
+        return df["OBV"]
 
+    @indicator
     def atr(self) -> pd.DataFrame:
         """
         Returns a DataFrame of the Average True Range (ATR)
 
         [https://en.wikipedia.org/wiki/Average_true_range]
         """
-
+        df = pd.DataFrame()
         high_low = self.data["High"] - self.data["Low"]
         high_close = np.abs(self.data["High"] - self.data["Close"].shift())
         low_close = np.abs(self.data["Low"] - self.data["Close"].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        atr = true_range.rolling(14).sum()/14
-        atr = atr.dropna()
-        return atr
+        df['ATR'] = true_range.rolling(14).sum()/14
+        df['ATR'] = df['ATR'].dropna()
+        return df['ATR']
 
     def fibonacci_retracement_levels(
         self, start_date: dt = None, end_date: dt = None
@@ -433,7 +457,8 @@ class StrategyBrain:
         level786 = max_price - (0.786 * diff)
 
         return [level236, level382, level618, level786]
-
+    
+    @indicator
     def stochastic_oscillator(self, d_sma_period: int = 3) -> pd.DataFrame:
         """
         Returns the stochastic oscillator where
@@ -446,7 +471,7 @@ class StrategyBrain:
         df = pd.DataFrame()
         fourteen_high = self.data['High'].rolling(14).max()
         fourteen_low = self.data['Low'].rolling(14).min()
-        df['%K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
-        df['%D'] = df['%K'].rolling(d_sma_period).mean()
+        df['Stoch %K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
+        df['Stoch %D'] = df['Stoch %K'].rolling(d_sma_period).mean()
         df.dropna(inplace=True)
         return df
