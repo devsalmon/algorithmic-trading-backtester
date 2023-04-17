@@ -4,12 +4,13 @@ import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
 from typing import Callable
-import inspect
-import functools
 
+# Method indicator wrapper
 def indicator(func):
-    func.is_indicator = True
-    return func
+    def wrapper(*args, **kwargs):
+        func(*args, **kwargs)
+    
+    return wrapper
 
 class StrategyBrain:
     def __init__(self, ticker: str, start_date: dt, end_date: dt):
@@ -37,7 +38,7 @@ class StrategyBrain:
             return False
         elif position != 0:
             # Get the price of first and second column on the given date and the day before
-            first_column_today, first_column_yeserday = (
+            first_column_today, first_column_yesterday = (
                 self.data[column_one_name].iloc[position],
                 self.data[column_one_name].iloc[position - 1],
             )
@@ -49,11 +50,11 @@ class StrategyBrain:
             # Check for crossover and return True in the case of a crossover
             if (
                 first_column_today > second_column_today
-                and first_column_yeserday < second_column_yesterday
+                and first_column_yesterday < second_column_yesterday
             ):
                 return True
 
-    def day_by_day(self, func: Callable[[dict], None]) -> None:
+    def day_by_day(self, func: Callable[..., None]) -> None:
         """
         Loops through each day of trading, applying func to the data
         """
@@ -214,11 +215,15 @@ class StrategyBrain:
         return df['MACD']
 
     def macd_signal_line(self) -> pd.DataFrame:
-        """Returns the signal line for the MACD which is an EMA of period 9"""
+        """
+        Returns the signal line for the MACD which is an EMA of period 9
+        """
         return self.exponential_moving_average(9)
 
     def macd_histogram(self) -> pd.DataFrame:
-        """Returns the histogram for MACD"""
+        """
+        Returns the histogram for MACD
+        """
         return self.macd() - self.macd_signal_line()
 
     @indicator
@@ -357,7 +362,9 @@ class StrategyBrain:
 
         where
             money ratio = positive money flow / negative money flow
+
             positive money flow = added money flow of all days where typical price (TP) is higher than previous day's TP
+
             negative money flow = added money flow of all days where typical price (TP) is lower than previous day's TP
         """
         df = pd.DataFrame()
@@ -429,9 +436,7 @@ class StrategyBrain:
         df['ATR'] = df['ATR'].dropna()
         return df['ATR']
 
-    def fibonacci_retracement_levels(
-        self, start_date: dt = None, end_date: dt = None
-    ) -> list:
+    def fibonacci_retracement_levels(self, start_date: dt = None, end_date: dt = None) -> list:
         """
         Returns a list of the 23.6%, 38.2%, 61.8% and 78.6% Fibonacci levels
         """
@@ -447,9 +452,7 @@ class StrategyBrain:
             end_date = str(end_date)
 
         self.data_range = self.data.copy().loc[start_date:end_date]
-        max_price, min_price = self.get_max_close_price(
-            self.data_range
-        ), self.get_min_close_price(self.data_range)
+        max_price, min_price = self.get_max_close_price(self.data_range), self.get_min_close_price(self.data_range)
         diff = max_price - min_price
         level236 = max_price - (0.236 * diff)
         level382 = max_price - (0.382 * diff)
@@ -464,6 +467,7 @@ class StrategyBrain:
         Returns the stochastic oscillator where
 
         %K = (Last Close - Lowest Close) / (Highest High - Lowest Low)
+
         %D = Simple Moving Average of %K
 
         [https://www.investopedia.com/terms/s/stochasticoscillator.asp]
@@ -475,3 +479,36 @@ class StrategyBrain:
         df['Stoch %D'] = df['Stoch %K'].rolling(d_sma_period).mean()
         df.dropna(inplace=True)
         return df
+    
+    @indicator
+    def accumulation_distribution(self, period: int = 7) -> pd.DataFrame:
+        """
+        Returns the Accumulation / Distribution
+
+        where 
+            MFM (Money Flow Multiplier) = ((Close - Low) - (High - Close)) / (High - Low)
+
+            Close = Closing price
+
+            Low = Low price for the period
+
+            High = High price for the period
+
+            Money Flow Volume = MFM * Period Volume
+
+            A/D = Previous A/D + CMFV
+
+            where 
+                CMFV = Current period money flow volume
+        
+        [https://www.investopedia.com/terms/a/accumulationdistribution.asp]
+        """
+        df = pd.DataFrame()
+        df["period_low"] = self.data["Low"].rolling(period).max()
+        df["period_high"] = self.data["High"].rolling(period).max()
+        df.dropna(inplace=True)
+        df["MFM"] = ((self.data["Close"] - df["period_low"]) - (df["period_high"] - self.data["Close"])) \
+                    / (df["period_high"]- df["period_low"])
+        df["MFV"] = df["MFM"] * self.data["Volume"].rolling(period).sum()
+        df["A/D"] = df["MFV"].cumsum()
+        return df["A/D"]

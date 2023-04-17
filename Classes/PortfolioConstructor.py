@@ -77,9 +77,7 @@ class PortfolioConstructor:
         tickers = set([trade[1] for trade in trades])
         return tickers
 
-    def get_yf_data(
-        self, tickers: list, start_date: str, end_date: str
-    ) -> pd.DataFrame:
+    def get_yf_data(self, tickers: list, start_date: str, end_date: str) -> pd.DataFrame:
         """Returns a dataframe of tickers for the date range provided"""
         tickers = list(tickers)
 

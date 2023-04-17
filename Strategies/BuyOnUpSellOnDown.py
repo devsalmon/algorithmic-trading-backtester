@@ -1,9 +1,7 @@
 import datetime as dt
 import pandas as pd
 import numpy as np
-# From filename import classname
-# TODO NEED TO IMPORT FROM PARENT FOLDER
-from Strategy import Strategy
+from Classes.StrategyBrain import StrategyBrain
 
 # The strategy will be code which we will get to later, however, what
 # it will output is an dataframe of:
@@ -20,9 +18,9 @@ import pandas as pd
 
 from PortfolioConstructor import PortfolioConstructor
 
-class BuyOnUpSellOnDown(Strategy):
+class BuyOnUpSellOnDown(StrategyBrain):
 	def __init__(self, ticker, start, end, period):
-		Strategy.__init__(self, ticker, start, end, '1d')
+		StrategyBrain.__init__(self, ticker, start, end, '1d')
 		self.start_date = start 
 		self.end_date = end
 		self.ticker = ticker
@@ -51,7 +49,6 @@ class BuyOnUpSellOnDown(Strategy):
 		return entry_exit_dates
 
 	def get_trade_order_list(self):
-		# TODO - add in lot sizing
 		trade_order_list = []
 		count = 0
 		if self.entry_exit_dates[-1][0] == "ENTRY":
