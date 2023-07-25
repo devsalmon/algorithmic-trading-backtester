@@ -5,12 +5,14 @@ import datetime as dt
 import matplotlib.pyplot as plt
 from typing import Callable
 
+
 # Method indicator wrapper
 def indicator(func):
     def wrapper(*args, **kwargs):
         func(*args, **kwargs)
-    
+
     return wrapper
+
 
 class StrategyBrain:
     def __init__(self, ticker: str, start_date: dt, end_date: dt):
@@ -119,21 +121,21 @@ class StrategyBrain:
         (gets all methods with the @indicator decorator)
         """
         # self.data.drop(["Open", "High", "Low", "Close", "Volume", "Adj Close"], axis=1, inplace=True)
-        
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
+
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.width", None)
         df = self.data.copy()
         indicator_list = []
         for method_name in self.__dir__():
             method = getattr(self, method_name)
-            if callable(method) and hasattr(method, 'is_indicator'):
+            if callable(method) and hasattr(method, "is_indicator"):
                 indicator_list.append(method_name)
                 # Call the function and add it do the dataframe
                 indicator_df = getattr(self, method_name)()
                 df = pd.concat([indicator_df, df], axis=1)
 
         return df
-    
+
     def get_entry_exit_dates(self, indicators_and_signals_df: pd.DataFrame) -> list:
         """
         Returns a list of tuples of alternating buy and sell signals,  e.g [(Buy, date), (Sell, date), (Buy...)]
@@ -179,7 +181,7 @@ class StrategyBrain:
             )
         return trades_list
 
-    @indicator
+    # @indicator
     def simple_moving_average(self, period: int = 7) -> pd.DataFrame:
         """
         Returns the SMA for the given period
@@ -187,7 +189,7 @@ class StrategyBrain:
         [https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average]
         """
         df = pd.DataFrame()
-        df['SMA' + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
+        df["SMA" + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
         return df
 
     @indicator
@@ -198,7 +200,7 @@ class StrategyBrain:
         [https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average]
         """
         df = pd.DataFrame()
-        df['EMA' + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
+        df["EMA" + str(period)] = self.data.ewm(span=period).mean()["Adj Close"]
         return df
 
     @indicator
@@ -209,10 +211,10 @@ class StrategyBrain:
         [https://en.wikipedia.org/wiki/MACD]
         """
         df = pd.DataFrame()
-        df['EMA12'] = self.exponential_moving_average(12)
-        df['EMA26'] = self.exponential_moving_average(26)
-        df['MACD'] =  df["EMA12"] - df["EMA26"]
-        return df['MACD']
+        df["EMA12"] = self.exponential_moving_average(12)
+        df["EMA26"] = self.exponential_moving_average(26)
+        df["MACD"] = df["EMA12"] - df["EMA26"]
+        return df["MACD"]
 
     def macd_signal_line(self) -> pd.DataFrame:
         """
@@ -251,17 +253,11 @@ class StrategyBrain:
         ] = df["DownMove"]
 
         # Calculate +DI and -DI
-        df["+DI"] = (
-            100 * df["+DM"].rolling(window=period).mean() / self.atr()
-        )
-        df["-DI"] = (
-            100 * df["-DM"].rolling(window=period).mean() / self.atr()
-        )
+        df["+DI"] = 100 * df["+DM"].rolling(window=period).mean() / self.atr()
+        df["-DI"] = 100 * df["-DM"].rolling(window=period).mean() / self.atr()
 
         # Calculate the Directional Movement Index (DX)
-        df["DX"] = abs(df["+DI"] - df["-DI"]) / (
-            df["+DI"] + df["-DI"]
-        )
+        df["DX"] = abs(df["+DI"] - df["-DI"]) / (df["+DI"] + df["-DI"])
 
         # Calculate the ADX
         df["ADX"] = 100 * df["DX"].rolling(window=period).mean()
@@ -416,7 +412,11 @@ class StrategyBrain:
         [https://www.investopedia.com/terms/o/onbalancevolume.asp]
         """
         df = pd.DataFrame()
-        df['OBV'] = (np.sign(self.data["Close"].diff()) * self.data["Volume"]).fillna(0).cumsum()
+        df["OBV"] = (
+            (np.sign(self.data["Close"].diff()) * self.data["Volume"])
+            .fillna(0)
+            .cumsum()
+        )
         return df["OBV"]
 
     @indicator
@@ -432,11 +432,13 @@ class StrategyBrain:
         low_close = np.abs(self.data["Low"] - self.data["Close"].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        df['ATR'] = true_range.rolling(14).sum()/14
-        df['ATR'] = df['ATR'].dropna()
-        return df['ATR']
+        df["ATR"] = true_range.rolling(14).sum() / 14
+        df["ATR"] = df["ATR"].dropna()
+        return df["ATR"]
 
-    def fibonacci_retracement_levels(self, start_date: dt = None, end_date: dt = None) -> list:
+    def fibonacci_retracement_levels(
+        self, start_date: dt = None, end_date: dt = None
+    ) -> list:
         """
         Returns a list of the 23.6%, 38.2%, 61.8% and 78.6% Fibonacci levels
         """
@@ -452,7 +454,9 @@ class StrategyBrain:
             end_date = str(end_date)
 
         self.data_range = self.data.copy().loc[start_date:end_date]
-        max_price, min_price = self.get_max_close_price(self.data_range), self.get_min_close_price(self.data_range)
+        max_price, min_price = self.get_max_close_price(
+            self.data_range
+        ), self.get_min_close_price(self.data_range)
         diff = max_price - min_price
         level236 = max_price - (0.236 * diff)
         level382 = max_price - (0.382 * diff)
@@ -460,7 +464,7 @@ class StrategyBrain:
         level786 = max_price - (0.786 * diff)
 
         return [level236, level382, level618, level786]
-    
+
     @indicator
     def stochastic_oscillator(self, d_sma_period: int = 3) -> pd.DataFrame:
         """
@@ -473,19 +477,21 @@ class StrategyBrain:
         [https://www.investopedia.com/terms/s/stochasticoscillator.asp]
         """
         df = pd.DataFrame()
-        fourteen_high = self.data['High'].rolling(14).max()
-        fourteen_low = self.data['Low'].rolling(14).min()
-        df['Stoch %K'] = (self.data['Close'] - fourteen_low)*100/(fourteen_high - fourteen_low)
-        df['Stoch %D'] = df['Stoch %K'].rolling(d_sma_period).mean()
+        fourteen_high = self.data["High"].rolling(14).max()
+        fourteen_low = self.data["Low"].rolling(14).min()
+        df["Stoch %K"] = (
+            (self.data["Close"] - fourteen_low) * 100 / (fourteen_high - fourteen_low)
+        )
+        df["Stoch %D"] = df["Stoch %K"].rolling(d_sma_period).mean()
         df.dropna(inplace=True)
         return df
-    
+
     @indicator
     def accumulation_distribution(self, period: int = 7) -> pd.DataFrame:
         """
         Returns the Accumulation / Distribution
 
-        where 
+        where
             MFM (Money Flow Multiplier) = ((Close - Low) - (High - Close)) / (High - Low)
 
             Close = Closing price
@@ -498,17 +504,19 @@ class StrategyBrain:
 
             A/D = Previous A/D + CMFV
 
-            where 
+            where
                 CMFV = Current period money flow volume
-        
+
         [https://www.investopedia.com/terms/a/accumulationdistribution.asp]
         """
         df = pd.DataFrame()
         df["period_low"] = self.data["Low"].rolling(period).max()
         df["period_high"] = self.data["High"].rolling(period).max()
         df.dropna(inplace=True)
-        df["MFM"] = ((self.data["Close"] - df["period_low"]) - (df["period_high"] - self.data["Close"])) \
-                    / (df["period_high"]- df["period_low"])
+        df["MFM"] = (
+            (self.data["Close"] - df["period_low"])
+            - (df["period_high"] - self.data["Close"])
+        ) / (df["period_high"] - df["period_low"])
         df["MFV"] = df["MFM"] * self.data["Volume"].rolling(period).sum()
         df["A/D"] = df["MFV"].cumsum()
         return df["A/D"]
